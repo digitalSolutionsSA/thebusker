@@ -1,7 +1,19 @@
 import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
 import EmberScene from './three/EmberScene'
+import { useCountdown } from '../hooks/useCountdown'
+import { fetchShows } from '../lib/api'
+import type { Show } from '../types'
 
 export default function Hero() {
+  const [nextShow, setNextShow] = useState<Show | null>(null)
+
+  useEffect(() => {
+    fetchShows().then((shows) => setNextShow(shows[0] ?? null))
+  }, [])
+
+  const countdown = useCountdown(nextShow?.date ?? new Date().toISOString())
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-ink">
       <div className="absolute inset-0 bg-gradient-to-b from-ink-2 via-ink to-black" />
@@ -27,7 +39,7 @@ export default function Hero() {
           Good food, good drinks, and unforgettable live shows — under one roof. Home of live
           music nights and where V-Town turns into Bok Town on match day.
         </p>
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
           <Link
             to="/shows"
             className="brass-gradient text-ink font-semibold uppercase tracking-widest text-sm px-8 py-4 rounded-full hover:opacity-90 transition-opacity"
@@ -41,6 +53,30 @@ export default function Hero() {
             Enter Bok Town
           </Link>
         </div>
+
+        {nextShow && countdown && (
+          <Link
+            to="/shows"
+            className="inline-flex flex-col sm:flex-row items-center gap-4 sm:gap-6 rounded-2xl border border-brass/30 bg-cream/5 backdrop-blur px-6 py-4 hover:border-brass/60 transition-colors"
+          >
+            <div className="text-left">
+              <p className="text-brass-light text-[10px] uppercase tracking-[0.3em] mb-0.5">Up Next</p>
+              <p className="text-cream text-sm font-medium">{nextShow.title}</p>
+            </div>
+            <div className="flex items-center gap-3">
+              {[
+                { label: 'D', value: countdown.days },
+                { label: 'H', value: countdown.hours },
+                { label: 'M', value: countdown.minutes },
+              ].map((c) => (
+                <div key={c.label} className="text-center bg-ink/60 rounded-lg px-3 py-2 min-w-14">
+                  <div className="font-headline text-xl brass-text leading-none">{c.value}</div>
+                  <div className="text-cream/50 text-[10px] uppercase tracking-widest">{c.label}</div>
+                </div>
+              ))}
+            </div>
+          </Link>
+        )}
       </div>
 
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-cream/40 text-xs uppercase tracking-widest animate-bounce">
