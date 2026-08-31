@@ -3,6 +3,7 @@ import type { Show } from '../types'
 import { fetchShows } from '../lib/api'
 import ShowCard from '../components/ShowCard'
 import BookingModal from '../components/BookingModal'
+import NextShowCountdown from '../components/NextShowCountdown'
 
 type Filter = 'all' | 'live-music' | 'bok-town'
 
@@ -20,6 +21,7 @@ export default function ShowsPage() {
   }, [])
 
   const filtered = shows.filter((s) => filter === 'all' || s.category === filter)
+  const nextShow = shows[0] ?? null
 
   return (
     <div className="pt-32 pb-24 min-h-screen bg-ink">
@@ -32,6 +34,8 @@ export default function ShowsPage() {
             between.
           </p>
         </div>
+
+        {nextShow && <NextShowCountdown show={nextShow} onBook={setSelected} />}
 
         <div className="flex justify-center gap-3 mb-12">
           {[
