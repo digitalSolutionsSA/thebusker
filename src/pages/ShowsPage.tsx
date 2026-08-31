@@ -4,6 +4,7 @@ import { fetchShows } from '../lib/api'
 import ShowCard from '../components/ShowCard'
 import BookingModal from '../components/BookingModal'
 import NextShowCountdown from '../components/NextShowCountdown'
+import Gallery from '../components/Gallery'
 
 type Filter = 'all' | 'live-music' | 'bok-town'
 
@@ -71,6 +72,12 @@ export default function ShowsPage() {
       </div>
 
       {selected && <BookingModal show={selected} onClose={() => setSelected(null)} />}
+
+      <Gallery
+        tag="shows"
+        title="From The Stage"
+        subtitle="Moments from past live music nights at The Busker."
+      />
     </div>
   )
 }
