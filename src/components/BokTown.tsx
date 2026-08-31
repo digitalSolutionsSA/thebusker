@@ -17,14 +17,22 @@ export default function BokTown() {
   const countdown = useCountdown(nextMatch?.date ?? new Date().toISOString())
 
   return (
-    <section
-      id="bok-town"
-      className="relative py-28 overflow-hidden"
-      style={{
-        background:
-          'linear-gradient(180deg, #05170d 0%, #0b3d24 55%, #05170d 100%)',
-      }}
-    >
+    <section id="bok-town" className="relative py-28 overflow-hidden bg-[#05170d]">
+      <video
+        className="absolute inset-0 w-full h-full object-cover"
+        src="/springboks_vXYF8v4J.mp4"
+        autoPlay
+        loop
+        muted
+        playsInline
+      />
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            'linear-gradient(180deg, rgba(5,23,13,0.85) 0%, rgba(11,61,36,0.75) 55%, rgba(5,23,13,0.9) 100%)',
+        }}
+      />
       <div
         className="absolute inset-0 opacity-20"
         style={{
