@@ -1,0 +1,67 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700;800&family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap');
+
+@theme {
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-headline: 'Bebas Neue', 'Playfair Display', sans-serif;
+  --font-sans: 'Inter', system-ui, sans-serif;
+
+  --color-ink: #0b0906;
+  --color-ink-2: #141009;
+  --color-brass: #c9922f;
+  --color-brass-light: #e8c27a;
+  --color-brass-dark: #8a6420;
+  --color-cream: #f3ead9;
+  --color-bok-green: #0b3d24;
+  --color-bok-gold: #ffcc02;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-ink);
+  color: var(--color-cream);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-headline {
+  font-family: var(--font-headline);
+  letter-spacing: 0.04em;
+}
+
+::selection {
+  background: var(--color-brass);
+  color: var(--color-ink);
+}
+
+.brass-gradient {
+  background: linear-gradient(135deg, #e8c27a 0%, #c9922f 45%, #8a6420 100%);
+}
+
+.brass-text {
+  background: linear-gradient(135deg, #f3d99a 0%, #c9922f 60%, #8a6420 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.card-glass {
+  background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+  border: 1px solid rgba(201,146,47,0.25);
+  backdrop-filter: blur(6px);
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up {
+  animation: fade-up 0.8s ease-out both;
+}
