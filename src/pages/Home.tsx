@@ -1,5 +1,6 @@
 import Hero from '../components/Hero'
 import BokTown from '../components/BokTown'
+import UpcomingShowsSummary from '../components/UpcomingShowsSummary'
 import { Link } from 'react-router-dom'
 
 export default function Home() {
@@ -7,6 +8,7 @@ export default function Home() {
     <>
       <Hero />
       <BokTown />
+      <UpcomingShowsSummary />
 
       <section className="py-28 bg-ink">
         <div className="max-w-6xl mx-auto px-6 grid md:grid-cols-2 gap-16 items-center">
