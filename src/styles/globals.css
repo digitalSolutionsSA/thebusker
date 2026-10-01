@@ -1,0 +1,332 @@
+@import "tailwindcss";
+
+@theme {
+  /* Roman-inscription capitals for headings, an engraved serif for body accents, a flowing gold script */
+  --font-display: 'Cinzel', 'Trajan Pro', Georgia, serif;
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
+  --font-sans: 'Manrope', system-ui, sans-serif;
+  --font-script: 'Yellowtail', cursive;
+  --font-brush: 'Permanent Marker', 'Manrope', sans-serif;
+
+  /* Core palette — dark walnut browns with polished gold ("ember" = the primary gold accent) */
+  --color-night: #0f0b07;
+  --color-night-2: #17110b;
+  --color-night-3: #1f1710;
+  --color-night-4: #2a1f15;
+  --color-ivory: #f5ecdc;
+  --color-mist: #bfae92;
+  --color-ember: #c9a24a;
+  --color-ember-light: #e8c97a;
+  --color-ember-deep: #8a6a24;
+  --color-gold: #e2bd6d;
+  --color-gold-light: #f3d998;
+
+  /* Bok Town */
+  --color-bok-night: #04140b;
+  --color-bok-green: #0b3d24;
+  --color-bok-grass: #1c8a4a;
+  --color-bok-gold: #ffc72c;
+
+  /* Cool stage-light blue that plays against the gold (venue lighting in photos) */
+  --color-stage: #2f4bd8;
+  --color-stage-light: #6f86ff;
+
+  --ease-luxe: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@layer base {
+  html {
+    background: var(--color-night);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    /* Walnut veneer under everything, darkened so it reads as rich wood rather than pattern */
+    background:
+      linear-gradient(rgb(15 11 7 / 0.86), rgb(15 11 7 / 0.92)),
+      url('/images/textures/walnut.webp') center / cover fixed,
+      var(--color-night);
+    color: var(--color-ivory);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    background: var(--color-ember);
+    color: var(--color-night);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-ember-light);
+    outline-offset: 3px;
+  }
+
+  img {
+    user-select: none;
+  }
+}
+
+@layer components {
+  /* Small tracked-out label that sits above headings */
+  .eyebrow {
+    font-family: var(--font-sans);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.42em;
+    text-transform: uppercase;
+  }
+
+  /* Hairline with gold fade used as a luxury divider */
+  .hairline {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgb(226 189 109 / 0.55), transparent);
+  }
+
+  /* Polished gold — light catching the edge of the metal */
+  .text-gold-gradient,
+  .text-ember-gradient {
+    background: linear-gradient(115deg, #fbeab8 0%, #e2bd6d 28%, #a8842a 52%, #f3d998 74%, #c9a24a 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Gold-framed walnut panel for cards and forms */
+  .glass {
+    background:
+      linear-gradient(160deg, rgb(23 17 11 / 0.78), rgb(15 11 7 / 0.9)),
+      url('/images/textures/walnut.webp') center / cover;
+    border: 1px solid rgb(201 162 74 / 0.28);
+    box-shadow:
+      inset 0 1px 0 rgb(243 217 152 / 0.1),
+      0 30px 60px -30px rgb(0 0 0 / 0.8);
+  }
+
+  /* Real walnut veneer, used under a dark overlay */
+  .bg-wood {
+    background: url('/images/textures/walnut.webp') center / cover;
+  }
+
+  .bg-slats {
+    background: url('/images/textures/wood-slats.webp') center / cover;
+  }
+
+  /* Thin gold frame inset from a card's edge — the "luxury" detail */
+  .gold-frame::before {
+    content: '';
+    position: absolute;
+    inset: 10px;
+    border: 1px solid rgb(226 189 109 / 0.22);
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* Subtle film grain overlay — adds depth to flat dark backgrounds */
+  .grain::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.07;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Cinzel: Roman capitals — medium weight, generous tracking, gentle line spacing */
+.font-display {
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  line-height: 1.02;
+}
+
+.font-serif {
+  font-family: var(--font-serif);
+}
+
+/* Gold-leaf headline: brighter at the top like engraved metal catching stage light */
+.text-gold-leaf {
+  background: linear-gradient(180deg, #fff1c8 0%, #ecc879 38%, #c69a45 62%, #8a6424 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 2px 12px rgb(0 0 0 / 0.55));
+}
+
+/* ---------- Scroll-reveal primitives (ACH-style) ---------- */
+
+/* Masked line: wrap each heading line as <span class="mask-line"><span>…</span></span> */
+.mask-line {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.06em;
+  margin-bottom: -0.06em;
+}
+.mask-line > span {
+  display: inline-block;
+  will-change: transform;
+}
+
+/* Thin gold rule that GSAP draws in from the left */
+.gold-rule {
+  display: block;
+  height: 1px;
+  width: 100%;
+  background: linear-gradient(90deg, rgb(226 189 109 / 0.9), rgb(226 189 109 / 0.15));
+  transform-origin: left center;
+}
+
+/* Ornamental divider: rule ✦ rule */
+.ornament {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  color: var(--color-gold);
+}
+.ornament::before,
+.ornament::after {
+  content: '';
+  height: 1px;
+  flex: 1;
+  background: linear-gradient(90deg, transparent, rgb(226 189 109 / 0.6));
+}
+.ornament::after {
+  background: linear-gradient(90deg, rgb(226 189 109 / 0.6), transparent);
+}
+
+/* background-clip:text doesn't reach the word elements SplitText creates,
+   so re-apply the gradient on each word */
+:is(.text-ember-gradient, .text-gold-gradient, .text-gold-leaf) :is(div, span) {
+  background: inherit;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Masked gold headings: only the moving word layer may carry the clipped gradient —
+   if an outer layer clips too, it leaves a ghost of the text at its resting position mid-animation */
+.text-gold-leaf:has(.mask-line),
+.text-gold-leaf .mask-line {
+  background: none;
+  filter: none;
+}
+.text-gold-leaf .mask-line > span {
+  background: linear-gradient(180deg, #fff1c8 0%, #ecc879 38%, #c69a45 62%, #8a6424 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 2px 12px rgb(0 0 0 / 0.55));
+}
+
+@keyframes scrollcue {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(200%); }
+}
+
+/* ---------- Custom cursor ---------- */
+.cursor-dot,
+.cursor-ring {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 400;
+  pointer-events: none;
+  border-radius: 50%;
+  display: none;
+}
+.has-cursor .cursor-dot,
+.has-cursor .cursor-ring {
+  display: block;
+}
+.has-cursor,
+.has-cursor a,
+.has-cursor button,
+.has-cursor [data-cursor] {
+  cursor: none;
+}
+.cursor-dot {
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -3px;
+  background: var(--color-gold-light);
+}
+.cursor-ring {
+  width: 40px;
+  height: 40px;
+  margin: -20px 0 0 -20px;
+  border: 1px solid rgb(226 189 109 / 0.55);
+  transition: width 0.5s var(--ease-luxe), height 0.5s var(--ease-luxe), margin 0.5s var(--ease-luxe), background 0.5s var(--ease-luxe),
+    border-color 0.5s ease, transform 0.2s ease;
+}
+.cursor-ring.is-hot {
+  width: 64px;
+  height: 64px;
+  margin: -32px 0 0 -32px;
+  border-color: rgb(243 217 152 / 0.95);
+}
+.cursor-ring.has-label {
+  width: 92px;
+  height: 92px;
+  margin: -46px 0 0 -46px;
+  background: linear-gradient(135deg, #f6e3b0, #c9a24a 55%, #8a6424);
+  border-color: transparent;
+}
+.cursor-ring.has-label::after {
+  content: attr(data-label);
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-sans);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  text-transform: uppercase;
+  color: var(--color-night);
+}
+.cursor-ring.is-down {
+  transform: scale(0.85);
+}
+
+/* ---------- Big editorial type (thin italic serif + heavy gold capitals) ---------- */
+.type-thin {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 300;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.type-heavy {
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+/* SplitText line masks */
+.split-line {
+  overflow: hidden;
+  padding-bottom: 0.08em;
+  margin-bottom: -0.08em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+}

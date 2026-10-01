@@ -1,7 +1,41 @@
 # The Busker — Music Hall & Venue
 
-Vite + React + TypeScript + Tailwind v4 + Three.js (react-three-fiber) website with a Bok Town
-(Springboks) section and a full ticket booking flow via Stripe Checkout + Supabase.
+Vite + React + TypeScript + Tailwind v4 website with a Bok Town (Springboks) section and a full
+ticket booking flow via Stripe Checkout + Supabase.
+
+- **Three.js** (react-three-fiber + drei) — stage lights & mirror ball (home), rugby ball & confetti
+  (Bok Town), ambient beams (inner pages). Scenes are lazy-loaded and pause when off screen.
+- **GSAP** (ScrollTrigger, SplitText, `@gsap/react`) — preloader, split-text headings, hero
+  parallax, marquee, magnetic buttons, card tilt, mobile menu, page transitions.
+- **ScrollReveal** — section/card reveals via `useReveal` / `useRevealChildren` in `src/hooks/useReveal.ts`.
+
+## Photos
+
+`public/images/` holds Unsplash stock photos (free under the Unsplash License) used for look and
+feel — sources are listed in `public/images/SOURCES.md`, and every path is set in
+`src/data/images.ts`. Gallery entries in `src/data/gallery.ts` are marked `placeholder: true`.
+**Replace these with real photos of The Busker before launch.** A show's own `image_url` always
+takes priority over the stock poster.
+
+## Project structure
+
+Every component lives in its own folder (`Name/Name.tsx` + `index.ts`).
+
+```
+src/
+  config/site.ts        venue details, nav links (edit phone/email/socials here)
+  components/
+    layout/             Navbar, MobileMenu, Footer, Preloader, PageTransition, ScrollManager, CursorGlow, SiteLayout
+    ui/                 Button, Logo, SectionHeading, SplitHeading, Marquee, CountdownTimer, FormField, TeamBadge, SocialLinks
+    shows/              ShowCard, ShowPoster, FixtureCard, TicketSelector, OrderSummary, BookingPanel
+    three/              StageScene, RugbyScene, AmbientScene, CameraRig
+    gallery/            Lightbox
+    decor/              CrowdSilhouette
+  sections/             page sections grouped by page (home, shows, bokTown, about, contact, shared)
+  pages/                one folder per route
+  hooks/ lib/ data/ types/ styles/
+public/brand/           trimmed logos + favicon (originals stay in public/)
+```
 
 ## Local development
 

@@ -25,3 +25,7 @@ dist-ssr
 
 # Env
 .env
+
+# Original full-size show posters (16–24 MB each). The site uses the optimised
+# copies in public/images/posters, so keep these out of git and out of the build.
+public/SHOWS/

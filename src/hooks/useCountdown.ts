@@ -1,17 +1,31 @@
 import { useEffect, useState } from 'react'
 
-export function useCountdown(target: string) {
-  const [remaining, setRemaining] = useState(() => new Date(target).getTime() - Date.now())
+export interface Countdown {
+  days: number
+  hours: number
+  minutes: number
+  seconds: number
+}
+
+/** Ticks once a second until `target`; returns null once it has passed (or with no target). */
+export function useCountdown(target: Date | null): Countdown | null {
+  const targetMs = target?.getTime() ?? null
+  const [now, setNow] = useState(() => Date.now())
 
   useEffect(() => {
-    setRemaining(new Date(target).getTime() - Date.now())
-    const id = setInterval(() => setRemaining(new Date(target).getTime() - Date.now()), 1000)
+    if (targetMs === null) return
+    const id = setInterval(() => setNow(Date.now()), 1000)
     return () => clearInterval(id)
-  }, [target])
+  }, [targetMs])
 
+  if (targetMs === null) return null
+  const remaining = targetMs - now
   if (remaining <= 0) return null
-  const days = Math.floor(remaining / (1000 * 60 * 60 * 24))
-  const hours = Math.floor((remaining / (1000 * 60 * 60)) % 24)
-  const minutes = Math.floor((remaining / (1000 * 60)) % 60)
-  return { days, hours, minutes }
+
+  return {
+    days: Math.floor(remaining / 86_400_000),
+    hours: Math.floor((remaining / 3_600_000) % 24),
+    minutes: Math.floor((remaining / 60_000) % 60),
+    seconds: Math.floor((remaining / 1000) % 60),
+  }
 }
