@@ -76,9 +76,12 @@ export default function ShowHero({ show }: { show: Show }) {
           .from('[data-show-card]', { opacity: 0, y: 120, rotateX: 25, rotateY: -20, duration: 2, ease: 'expo.out' }, 0.3)
 
         const scrub = { trigger: el, start: 'top top', end: 'bottom top', scrub: true }
-        gsap.to('[data-show-copy]', { yPercent: -20, opacity: 0.1, ease: 'none', scrollTrigger: scrub })
-        gsap.to('[data-show-cardwrap]', { yPercent: -12, ease: 'none', scrollTrigger: scrub })
         gsap.to('[data-show-canvas]', { yPercent: 18, ease: 'none', scrollTrigger: scrub })
+        // Desktop only: on phones the poster stacks below the details and must not fade before you reach it
+        gsap.matchMedia().add('(min-width: 1024px)', () => {
+          gsap.to('[data-show-copy]', { yPercent: -20, opacity: 0.1, ease: 'none', scrollTrigger: scrub })
+          gsap.to('[data-show-cardwrap]', { yPercent: -12, ease: 'none', scrollTrigger: scrub })
+        })
       }, el)
 
       // Poster tilts toward the pointer, glare follows

@@ -98,9 +98,13 @@ export default function HomeHero() {
             .from('[data-hero-fade]', { opacity: 0, duration: 1.6 }, 1.2)
 
           const scrub = { trigger: el, start: 'top top', end: 'bottom top', scrub: true }
-          gsap.to('[data-hero-content]', { yPercent: -18, opacity: 0.15, ease: 'none', scrollTrigger: scrub })
-          gsap.to('[data-hero-next]', { yPercent: -10, opacity: 0.2, ease: 'none', scrollTrigger: scrub })
           gsap.to('[data-hero-canvas]', { yPercent: 18, ease: 'none', scrollTrigger: scrub })
+          // Fade the copy and "Up next" away only on desktop, where both sit side by side in one screen.
+          // On phones they stack into a tall hero, so fading here would dim "Up next" before you reach it.
+          gsap.matchMedia().add('(min-width: 1024px)', () => {
+            gsap.to('[data-hero-content]', { yPercent: -18, opacity: 0.15, ease: 'none', scrollTrigger: scrub })
+            gsap.to('[data-hero-next]', { yPercent: -10, opacity: 0.2, ease: 'none', scrollTrigger: scrub })
+          })
         }
         first.current = false
         startTimer(0)
