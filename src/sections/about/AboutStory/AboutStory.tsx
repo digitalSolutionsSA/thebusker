@@ -52,10 +52,10 @@ export default function AboutStory() {
         </p>
         <h2 className="leading-[0.98] text-[clamp(2.3rem,4.8vw,4.4rem)]">
           <span className="mask-line">
-            <span className="type-thin text-ivory/90">Great food,</span>
+            <span className="type-thin text-ivory/90">Good vibes,</span>
           </span>
           <span className="mask-line">
-            <span className="type-heavy text-gold-leaf">good shows &amp;</span>
+            <span className="type-heavy text-gold-leaf">great shows &amp;</span>
           </span>
           <span className="mask-line">
             <span className="type-heavy text-gold-leaf">nights to remember</span>

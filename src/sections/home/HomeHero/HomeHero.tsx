@@ -101,9 +101,19 @@ export default function HomeHero() {
           gsap.to('[data-hero-canvas]', { yPercent: 18, ease: 'none', scrollTrigger: scrub })
           // Fade the copy and "Up next" away only on desktop, where both sit side by side in one screen.
           // On phones they stack into a tall hero, so fading here would dim "Up next" before you reach it.
+          // Explicit start values: the intro above fades [data-hero-next] in *from* opacity 0, and a plain
+          // .to() would record that 0 as its start — the shows then vanished on the first bit of scroll.
           gsap.matchMedia().add('(min-width: 1024px)', () => {
-            gsap.to('[data-hero-content]', { yPercent: -18, opacity: 0.15, ease: 'none', scrollTrigger: scrub })
-            gsap.to('[data-hero-next]', { yPercent: -10, opacity: 0.2, ease: 'none', scrollTrigger: scrub })
+            gsap.fromTo(
+              '[data-hero-content]',
+              { yPercent: 0, opacity: 1 },
+              { yPercent: -18, opacity: 0.15, ease: 'none', immediateRender: false, scrollTrigger: scrub },
+            )
+            gsap.fromTo(
+              '[data-hero-next]',
+              { yPercent: 0, opacity: 1 },
+              { yPercent: -10, opacity: 0.2, ease: 'none', immediateRender: false, scrollTrigger: scrub },
+            )
           })
         }
         first.current = false
@@ -125,13 +135,15 @@ export default function HomeHero() {
       <div className="absolute inset-0 -z-10 bg-gradient-to-t from-night via-transparent to-night/60" />
       <div className="absolute inset-0 -z-10 bg-night/35 lg:hidden" />
 
-      <div className="relative mx-auto grid w-full max-w-[90rem] items-center gap-14 px-5 pt-32 pb-40 sm:px-8 lg:grid-cols-[1.4fr_1fr] lg:px-14">
+      {/* Big headline leads; the upcoming shows cycle beside it. A narrower frame than the page keeps
+          the two together on wide screens instead of pinned to opposite edges. */}
+      <div className="relative mx-auto grid w-full max-w-[84rem] items-center gap-14 px-5 pt-32 pb-36 sm:px-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-16 lg:px-14 lg:pt-28 lg:pb-28 xl:gap-24">
         <div data-hero-content>
-          <p data-hero-eyebrow className="eyebrow mb-8 flex items-center gap-5 text-gold">
+          <p data-hero-eyebrow className="eyebrow mb-7 flex items-center gap-5 text-gold">
             Music Hall &amp; Venue · Vereeniging <span className="h-px w-12 bg-current opacity-70" />
           </p>
           <h1
-            className="leading-[0.95] text-[clamp(2.3rem,6.6vw,6.2rem)]"
+            className="leading-[0.95] text-[clamp(2.1rem,5vw,4.7rem)]"
             aria-label={current.lines.map((l) => l.text).join(' ')}
           >
             {current.lines.map((l, i) => (
@@ -140,10 +152,10 @@ export default function HomeHero() {
               </span>
             ))}
           </h1>
-          <p data-hero-copy className="mt-8 max-w-md font-serif text-lg leading-relaxed text-ivory/80 sm:text-xl">
+          <p data-hero-copy className="mt-7 max-w-md font-serif text-lg leading-relaxed text-ivory/80 sm:text-xl">
             Good food, cold drinks and the best live acts in the Vaal — all under one roof at the Old Barnyard.
           </p>
-          <div data-hero-cta className="mt-10 flex flex-wrap items-center gap-4">
+          <div data-hero-cta className="mt-9 flex flex-wrap items-center gap-4">
             <Button to="/shows" size="lg" magnetic>
               Upcoming shows <ArrowRight size={16} />
             </Button>
@@ -153,7 +165,8 @@ export default function HomeHero() {
           </div>
         </div>
 
-        <div data-hero-next>
+        {/* Right padding leaves room for the posters fanned out behind the front one */}
+        <div data-hero-next className="lg:pr-10 xl:pr-14">
           <HeroNextShow />
         </div>
       </div>

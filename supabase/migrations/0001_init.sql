@@ -56,16 +56,8 @@ begin
   end if;
   return new;
 end;
-$$ language plpgsql security definer;
+$$ language plpgsql security definer set search_path = public;
 
 create trigger bookings_mark_paid
   after update on bookings
   for each row execute function increment_tickets_sold();
-
--- Seed demo shows
-insert into shows (slug, title, artist, description, date, doors_time, price_cents, currency, capacity, category)
-values
-  ('jp-dix-live', 'Live Music: JP Dix', 'JP Dix', 'An intimate night of acoustic favourites and busker classics on the main stage.', current_date + interval '6 days', '19:00', 15000, 'ZAR', 150, 'live-music'),
-  ('leo-sonskyn', 'Live Music: Leo Sonskyn', 'Leo Sonskyn', 'Sunset sessions on the Busker terrace — good tunes, cold taps, great company.', current_date + interval '13 days', '14:30', 10000, 'ZAR', 150, 'live-music'),
-  ('springboks-vs-wales-big-screen', 'Springboks vs Wales — Big Screen', 'Bok Town Screening', 'Turning V-Town into Bok Town. Watch the Boks live on our big screen with a platter, Castle Double Malt & Springbokkie included.', current_date + interval '20 days', '17:40', 25000, 'ZAR', 300, 'bok-town')
-on conflict (slug) do nothing;

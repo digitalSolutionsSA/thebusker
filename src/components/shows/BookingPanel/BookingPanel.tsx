@@ -1,88 +1,190 @@
-import { useState, type FormEvent } from 'react'
-import { ArrowRight, Lock } from 'lucide-react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { ArrowRight, Lock, X } from 'lucide-react'
 import type { Show } from '../../../types'
 import { createCheckoutSession } from '../../../lib/api'
-import { ticketsRemaining } from '../../../lib/format'
+import { formatPrice } from '../../../lib/format'
+import { floors, seatsById, tablesById, type FloorId } from '../../../data/venueLayout'
+import { useTakenSeats } from '../../../hooks/useTakenSeats'
+import { useInView } from '../../../hooks/useInView'
 import Button from '../../ui/Button'
-import TicketSelector from '../TicketSelector'
-import OrderSummary from '../OrderSummary'
 import FormField from '../../ui/FormField'
+import SeatMap from '../SeatMap'
 
-const MAX_PER_ORDER = 10
+/** Seat ids behind a selected table or single seat */
+const seatsOf = (id: string) => tablesById.get(id)?.seats.map((s) => s.id) ?? [id]
+const labelOf = (id: string) => tablesById.get(id)?.label ?? seatsById.get(id)?.label ?? id
 
-/** Ticket picker + contact details, handing off to Stripe Checkout. */
+/** Pick tables / seats on the hall plan, add contact details, then pay on Yoco. */
 export default function BookingPanel({ show }: { show: Show }) {
-  const remaining = ticketsRemaining(show)
-  const max = Math.min(remaining, MAX_PER_ORDER)
   const bok = show.category === 'bok-town'
+  const { taken, refresh, markTaken } = useTakenSeats(show.id)
 
-  const [quantity, setQuantity] = useState(1)
+  const [floorId, setFloorId] = useState<FloorId>('downstairs')
+  const [selected, setSelected] = useState<Set<string>>(() => new Set())
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [formRef, formInView] = useInView<HTMLFormElement>('0px')
+
+  const floor = floors.find((f) => f.id === floorId)!
+  const seatIds = useMemo(() => [...selected].flatMap(seatsOf), [selected])
+  const total = formatPrice(show.price_cents * seatIds.length, show.currency)
+
+  // Someone else got there first: drop those picks and say so
+  useEffect(() => {
+    const lost = [...selected].filter((id) => seatsOf(id).some((s) => taken.has(s)))
+    if (lost.length === 0) return
+    setSelected((prev) => new Set([...prev].filter((id) => !lost.includes(id))))
+    setError(`Just booked by someone else: ${lost.map(labelOf).join(', ')}. Please choose again.`)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [taken])
+
+  const toggle = (id: string) => {
+    setError(null)
+    setSelected((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    setError(null)
-    setLoading(true)
-    const result = await createCheckoutSession({ showId: show.id, quantity, name, email, phone })
-    setLoading(false)
-    if ('error' in result) {
-      setError(result.error)
+    if (seatIds.length === 0) {
+      setError('Tap a table or seat on the plan first.')
       return
     }
-    window.location.href = result.url
+    setError(null)
+    setLoading(true)
+    const result = await createCheckoutSession({ showId: show.id, seatIds, name, email, phone })
+    if ('url' in result) {
+      window.location.href = result.url
+      return
+    }
+    setLoading(false)
+    if (result.takenSeats?.length) markTaken(result.takenSeats)
+    else setError(result.error)
+    refresh()
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="glass relative space-y-7 rounded-3xl p-6 sm:p-8 shadow-[0_40px_120px_-40px_rgb(201_162_74/0.5)]"
-    >
-      <div>
-        <h2 className="eyebrow mb-4 text-gold">Select tickets</h2>
-        <TicketSelector
-          label={bok ? 'Match-day ticket' : 'General admission'}
-          priceCents={show.price_cents}
-          currency={show.currency}
-          quantity={quantity}
-          max={Math.max(max, 1)}
-          remaining={remaining}
-          onChange={(q) => setQuantity(Math.min(Math.max(q, 1), Math.max(max, 1)))}
-        />
-        {bok && (
-          <p className="mt-3 text-xs leading-relaxed text-mist">Includes a platter, Castle Double Malt &amp; a Springbokkie.</p>
-        )}
-      </div>
+    <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr] lg:items-start">
+      {/* Plan */}
+      <div className="glass min-w-0 rounded-3xl p-3 sm:p-5">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3 px-1">
+          <div className="flex rounded-full border border-white/10 p-1" role="tablist" aria-label="Floor">
+            {floors.map((f) => (
+              <button
+                key={f.id}
+                type="button"
+                role="tab"
+                aria-selected={f.id === floorId}
+                onClick={() => setFloorId(f.id)}
+                className={`rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.15em] transition-colors ${
+                  f.id === floorId ? 'bg-gold text-night' : 'text-mist hover:text-ivory'
+                }`}
+              >
+                {f.name}
+              </button>
+            ))}
+          </div>
+          <ul className="flex gap-4 text-[0.7rem] text-mist">
+            <li className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-[3px] border border-gold/60 bg-ivory/10" /> Free</li>
+            <li className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-[3px] bg-gold" /> Yours</li>
+            <li className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-[3px] border border-white/15 bg-white/[0.03]" /> Booked</li>
+          </ul>
+        </div>
 
-      <div>
-        <h2 className="eyebrow mb-4 text-gold">Your details</h2>
-        <div className="space-y-3">
-          <FormField label="Full name" value={name} onChange={setName} autoComplete="name" required />
-          <FormField label="Email address" type="email" value={email} onChange={setEmail} autoComplete="email" required />
-          <FormField label="Phone number" type="tel" value={phone} onChange={setPhone} autoComplete="tel" required />
+        <p className="mb-2 px-1 text-xs text-mist">
+          {floorId === 'downstairs'
+            ? 'Tap a table to book the whole table, or tap a single seat along the walls and boxes.'
+            : 'The balcony seats are booked one by one — tap the seats you want.'}
+          <span className="sm:hidden"> Swipe sideways to see the whole hall.</span>
+        </p>
+
+        <div className="-mx-1 overflow-x-auto">
+          <div className={floorId === 'downstairs' ? 'min-w-[640px] sm:min-w-0' : ''}>
+            <SeatMap floor={floor} taken={taken} selected={selected} onToggle={toggle} />
+          </div>
         </div>
       </div>
 
-      <OrderSummary quantity={quantity} priceCents={show.price_cents} currency={show.currency} />
+      {/* Order + details */}
+      <form
+        ref={formRef}
+        onSubmit={handleSubmit}
+        className="glass space-y-4 rounded-3xl p-5 shadow-[0_40px_120px_-40px_rgb(201_162_74/0.5)] sm:p-7 lg:sticky lg:top-28"
+      >
+        <div>
+          <p className="eyebrow mb-3 text-gold">Your seats</p>
+          {selected.size === 0 ? (
+            <p className="text-sm text-mist">Nothing picked yet — choose on the plan.</p>
+          ) : (
+            <ul className="flex flex-wrap gap-2">
+              {[...selected].map((id) => (
+                <li key={id}>
+                  <button
+                    type="button"
+                    onClick={() => toggle(id)}
+                    className="flex items-center gap-1.5 rounded-full border border-gold/40 bg-gold/10 py-1 pl-3 pr-2 text-xs text-ivory hover:border-gold"
+                    aria-label={`Remove ${labelOf(id)}`}
+                  >
+                    {labelOf(id)}
+                    {tablesById.has(id) && <span className="text-mist">· {seatsOf(id).length} seats</span>}
+                    <X size={12} className="text-mist" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          <p className="mt-3 text-xs text-mist">
+            {formatPrice(show.price_cents, show.currency)} per seat
+            {seatIds.length > 0 && ` · ${seatIds.length} seat${seatIds.length === 1 ? '' : 's'}`}
+          </p>
+          {bok && <p className="mt-1 text-xs text-mist">Includes a platter, Castle Double Malt &amp; a Springbokkie.</p>}
+        </div>
 
-      {error && (
-        <p className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200" role="alert">
-          {error}
-        </p>
-      )}
+        <FormField label="Full name" value={name} onChange={setName} autoComplete="name" required />
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+          <FormField label="Email" type="email" value={email} onChange={setEmail} autoComplete="email" required />
+          <FormField label="Phone" type="tel" value={phone} onChange={setPhone} autoComplete="tel" required />
+        </div>
 
-      <div className="space-y-3">
-        <Button type="submit" variant={bok ? 'bok' : 'primary'} size="lg" fullWidth disabled={loading || remaining === 0}>
-          {remaining === 0 ? 'Sold out' : loading ? 'Opening secure checkout…' : 'Proceed to checkout'}
-          {remaining > 0 && !loading && <ArrowRight size={16} />}
+        {error && (
+          <p className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200" role="alert">
+            {error}
+          </p>
+        )}
+
+        <Button type="submit" variant={bok ? 'bok' : 'primary'} size="lg" fullWidth disabled={loading}>
+          {loading ? 'Securing your seats…' : seatIds.length > 0 ? `Secure seats · ${total}` : 'Choose your seats'}
+          {!loading && seatIds.length > 0 && <ArrowRight size={16} />}
         </Button>
-        <p className="flex items-center justify-center gap-2 text-[0.7rem] text-ivory/40">
-          <Lock size={12} /> Secure checkout powered by Stripe
+        <p className="flex items-center justify-center gap-2 text-center text-[0.7rem] text-ivory/40">
+          <Lock size={12} /> Seats are held for 15 minutes while you pay securely with Yoco
         </p>
-      </div>
-    </form>
+      </form>
+
+      {/* Phones: the form is below a tall plan, so keep the total and a way to it on screen */}
+      {seatIds.length > 0 && !formInView && (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-gold/30 bg-night/95 px-4 py-3 backdrop-blur lg:hidden">
+          <div className="mx-auto flex max-w-xl items-center justify-between gap-4">
+            <p className="text-sm text-ivory">
+              {seatIds.length} seat{seatIds.length === 1 ? '' : 's'} · <span className="font-semibold">{total}</span>
+            </p>
+            <Button
+              type="button"
+              variant={bok ? 'bok' : 'primary'}
+              onClick={() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
+            >
+              Continue <ArrowRight size={14} />
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
   )
 }

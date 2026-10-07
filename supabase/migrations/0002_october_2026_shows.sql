@@ -1,5 +1,5 @@
 -- The Busker's real upcoming shows (October 2026), from the posters in public/SHOWS.
--- capacity isn't on the posters: 200 is a placeholder — update it per show.
+-- capacity is set to the full seating plan by 0004.
 insert into shows (slug, title, artist, description, date, doors_time, image_url, price_cents, currency, capacity, category)
 values
   ('club-night', 'Club Night', 'CMRN · Eduano · Kay · Primo',
@@ -18,7 +18,3 @@ on conflict (slug) do update set
   title = excluded.title, artist = excluded.artist, description = excluded.description, date = excluded.date,
   doors_time = excluded.doors_time, image_url = excluded.image_url, price_cents = excluded.price_cents,
   category = excluded.category;
-
--- 0001 seeded three demo shows. If you ran it, remove them so only the real shows are listed
--- (this also deletes any test bookings made against them):
--- delete from shows where slug in ('jp-dix-live', 'leo-sonskyn', 'springboks-vs-wales-big-screen');

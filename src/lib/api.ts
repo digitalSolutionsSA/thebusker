@@ -1,6 +1,6 @@
 import { supabase, isSupabaseConfigured } from './supabase'
 import { demoShows } from '../data/shows'
-import type { Show } from '../types'
+import type { BookingRequest, Show } from '../types'
 
 // Today's date in South Africa (YYYY-MM-DD), so shows drop off at SA midnight for every visitor
 const todayInSA = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Johannesburg' }).format(new Date())
@@ -46,26 +46,40 @@ export async function fetchShowBySlug(slug: string): Promise<Show | null> {
   return shows.find((s) => s.slug === slug) ?? null
 }
 
-interface CheckoutParams {
-  showId: string
-  quantity: number
-  name: string
-  email: string
-  phone: string
+/** Seats that are sold or held in someone's checkout for this show */
+export async function fetchTakenSeats(showId: string): Promise<string[]> {
+  if (!isSupabaseConfigured || !supabase) return []
+  const { data, error } = await supabase.rpc('get_taken_seats', { p_show_id: showId })
+  if (error) throw error
+  return (data ?? []) as string[]
 }
 
-export async function createCheckoutSession(params: CheckoutParams): Promise<{ url: string } | { error: string }> {
+type CheckoutResult = { url: string } | { error: string; takenSeats?: string[] }
+
+/** Holds the seats and returns the Yoco payment page to send the customer to */
+export async function createCheckoutSession(params: BookingRequest): Promise<CheckoutResult> {
   if (!isSupabaseConfigured || !supabase) {
     return { error: 'Booking is not fully configured yet. Please contact the venue directly on WhatsApp to reserve tickets.' }
   }
 
-  const { data, error } = await supabase.functions.invoke('create-checkout-session', {
+  const { data, error } = await supabase.functions.invoke('create-checkout', {
     body: params,
   })
 
   if (error) {
-    return { error: error.message ?? 'Something went wrong creating your booking.' }
+    // Non-2xx responses carry our { error, takenSeats } body on the underlying Response
+    const body = await (error as { context?: Response }).context?.json?.().catch(() => null)
+    return {
+      error: body?.error ?? error.message ?? 'Something went wrong creating your booking.',
+      takenSeats: body?.takenSeats,
+    }
   }
 
   return { url: data.url as string }
+}
+
+/** Frees a booking's held seats straight away when the customer cancels payment */
+export async function releaseBooking(bookingId: string) {
+  if (!isSupabaseConfigured || !supabase) return
+  await supabase.rpc('release_pending_booking', { p_booking_id: bookingId })
 }

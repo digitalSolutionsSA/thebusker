@@ -19,7 +19,8 @@ export interface Show {
 
 export interface BookingRequest {
   showId: string
-  quantity: number
+  /** Seat ids from src/data/venueLayout.ts — tables are sent as all their seats */
+  seatIds: string[]
   name: string
   email: string
   phone: string

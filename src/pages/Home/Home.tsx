@@ -13,7 +13,7 @@ export default function Home() {
       <Pillars />
       <div className="relative overflow-hidden border-b border-gold/30 bg-night-2 text-ivory/90">
         <div aria-hidden className="pointer-events-none absolute inset-0 bg-slats opacity-40" />
-        <Marquee items={['Live Music', 'Good Food', 'Cold Taps', 'Big Screen Rugby', 'Date Nights', 'Unforgettable Nights']} />
+        <Marquee items={['Live Music', 'Good Food', 'Cold Taps', 'Big Screen Rugby', 'Corporate Functions', 'Unforgettable Nights']} />
       </div>
       <VenueStory />
       <Spotlight />

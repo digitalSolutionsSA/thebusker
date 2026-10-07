@@ -1,12 +1,12 @@
 import { useRef } from 'react'
-import { Heart, PartyPopper, Users } from 'lucide-react'
+import { Briefcase, PartyPopper, Users } from 'lucide-react'
 import { gsap, useGSAP, prefersReducedMotion } from '../../../lib/gsap'
 import { images } from '../../../data/images'
 import SectionHeading from '../../../components/ui/SectionHeading'
 import GLPhoto from '../../../components/three/GLPhoto'
 
 const occasions = [
-  { icon: Heart, image: images.venue.toastDark, title: 'Date night', body: 'Dinner, drinks and a live set — an easy yes for a night out together.' },
+  { icon: Briefcase, image: images.venue.toastDark, title: 'Corporate functions', body: 'Year-end parties, team evenings and client events — food, drinks and entertainment sorted.' },
   { icon: Users, image: images.venue.platter, title: 'Family outing', body: 'Good food and good music for the whole family to enjoy.' },
   { icon: PartyPopper, image: images.venue.friendsToast, title: 'Celebrations', body: 'Birthdays, catch-ups and big wins — celebrate with friends.' },
 ]

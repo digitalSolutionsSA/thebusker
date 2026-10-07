@@ -1,18 +1,9 @@
 import { useParams } from 'react-router-dom'
 import { useShows } from '../../hooks/useShows'
-import { formatShortDate } from '../../lib/format'
-import { images } from '../../data/images'
 import Button from '../../components/ui/Button'
 import ShowHero from '../../sections/showDetail/ShowHero'
 import ShowBooking from '../../sections/showDetail/ShowBooking'
-import Spotlight from '../../sections/shared/Spotlight'
 import ShowsTrack from '../../sections/home/ShowsTrack'
-
-const spotlightPhoto = {
-  'live-music': images.hero.blueStage,
-  'bok-town': images.hero.stadium,
-  special: images.hero.handsUp,
-}
 
 export default function ShowDetail() {
   const { slug } = useParams()
@@ -36,20 +27,10 @@ export default function ShowDetail() {
     )
   }
 
-  const bok = show.category === 'bok-town'
-
   // Keyed on the show so the WebGL scene and pinned triggers rebuild when moving between shows
   return (
     <div key={show.id}>
       <ShowHero show={show} />
-      <Spotlight
-        tone={bok ? 'bok' : 'gold'}
-        image={spotlightPhoto[show.category]}
-        heavy={formatShortDate(show.date)}
-        thin={`from ${show.doors_time}.`}
-        eyebrow={bok ? 'Kick-off build-up' : 'Save the date'}
-        copy={bok ? 'Platter, Castle Double Malt and a Springbokkie included — grab a table with the crew.' : `${show.artist} live at The Busker Music Hall & Venue, Vereeniging.`}
-      />
       <ShowBooking show={show} />
       <ShowsTrack excludeSlug={show.slug} thin="More" heavy="Shows" />
     </div>

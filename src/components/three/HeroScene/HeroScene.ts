@@ -28,8 +28,11 @@ const fragment = /* glsl */ `
   uniform float uProgress;
   uniform float uTime;
   uniform vec2 uMouse;
-  uniform float uZoom;
-  uniform float uFocusX;
+  // Zoom and framing are per slot, so starting a wipe never moves the photo already on screen
+  uniform float uZoom1;
+  uniform float uZoom2;
+  uniform float uFocusX1;
+  uniform float uFocusX2;
   uniform float uFrame;
   uniform float uDim1;
   uniform float uDim2;
@@ -47,23 +50,23 @@ const fragment = /* glsl */ `
     return v;
   }
 
-  vec2 coverUv(vec2 uv, vec2 texRes) {
+  vec2 coverUv(vec2 uv, vec2 texRes, float focusX) {
     float viewAspect = (uView.x * uFrame) / uView.y;
     float texAspect = texRes.x / texRes.y;
     vec2 scale = vec2(1.0);
     if (viewAspect > texAspect) scale.y = texAspect / viewAspect;
     else scale.x = viewAspect / texAspect;
-    vec2 offset = vec2((1.0 - scale.x) * uFocusX, (1.0 - scale.y) * 0.5);
+    vec2 offset = vec2((1.0 - scale.x) * focusX, (1.0 - scale.y) * 0.5);
     return uv * scale + offset;
   }
 
-  vec3 sampleImg(sampler2D tex, vec2 res, vec2 uv, vec2 distort, float dim) {
+  vec3 sampleImg(sampler2D tex, vec2 res, vec2 uv, vec2 distort, float dim, float zoom, float focusX) {
     uv.x = (uv.x - (1.0 - uFrame)) / uFrame;
     float fade = mix(1.0, smoothstep(-0.05, 0.55, uv.x), step(uFrame, 0.99));
     vec2 c = uv - 0.5;
-    c /= uZoom;
+    c /= zoom;
     c += uMouse * 0.014;
-    vec2 u = coverUv(c + 0.5 + distort, res);
+    vec2 u = coverUv(c + 0.5 + distort, res, focusX);
     u = clamp(u, 0.001, 0.999);
     vec3 col = texture2D(tex, u).rgb * dim;
     // warm the photo toward whisky/gold
@@ -84,8 +87,8 @@ const fragment = /* glsl */ `
 
     vec2 d1 = vec2(n - 0.5, n * 0.4) * 0.09 * uProgress;
     vec2 d2 = vec2(n - 0.5, n * 0.4) * 0.09 * (1.0 - uProgress);
-    vec3 a = sampleImg(uTex1, uRes1, uv, d1, uDim1);
-    vec3 b = sampleImg(uTex2, uRes2, uv, d2, uDim2);
+    vec3 a = sampleImg(uTex1, uRes1, uv, d1, uDim1, uZoom1, uFocusX1);
+    vec3 b = sampleImg(uTex2, uRes2, uv, d2, uDim2, uZoom2, uFocusX2);
     vec3 col = mix(b, a, mask);
 
     // molten gold at the wipe edge
@@ -136,6 +139,10 @@ const dustFragment = /* glsl */ `
   }
 `
 
+/** Zoom a slide settles at; each new slide eases in from slightly closer */
+const REST_ZOOM = 1.04
+const ENTER_ZOOM = 1.14
+
 export interface HeroSlideImage {
   src: string
   /** 0 = keep left edge in frame, 1 = keep right edge */
@@ -180,8 +187,10 @@ export class HeroScene {
         uProgress: { value: 0 },
         uTime: { value: 0 },
         uMouse: { value: new THREE.Vector2() },
-        uZoom: { value: 1.04 },
-        uFocusX: { value: images[0].focusX },
+        uZoom1: { value: REST_ZOOM },
+        uZoom2: { value: REST_ZOOM },
+        uFocusX1: { value: images[0].focusX },
+        uFocusX2: { value: images[0].focusX },
         uFrame: { value: 1 },
         uDim1: { value: images[0].dim ?? 1 },
         uDim2: { value: images[0].dim ?? 1 },
@@ -250,22 +259,34 @@ export class HeroScene {
   goTo(index: number, duration = 1.9) {
     if (index === this.current || !this.textures[index]) return
     const u = this.material.uniforms
+    gsap.killTweensOf([u.uProgress, u.uZoom1, u.uZoom2])
+
+    // The photo on screen moves into slot 1 exactly as it looks right now (same zoom and framing),
+    // so nothing about it changes when the wipe starts; it just keeps settling if it hadn't yet.
+    const shownZoom = u.uProgress.value > 0.5 ? u.uZoom2.value : u.uZoom1.value
+    const shownFocus = u.uProgress.value > 0.5 ? u.uFocusX2.value : u.uFocusX1.value
     u.uTex1.value = this.textures[this.current]
     u.uRes1.value = this.sizes[this.current]
     u.uDim1.value = this.images[this.current].dim ?? 1
+    u.uZoom1.value = shownZoom
+    u.uFocusX1.value = shownFocus
+    gsap.to(u.uZoom1, { value: REST_ZOOM, duration: 2, ease: 'power2.out' })
+
+    // The incoming photo gets its own framing and a gentle zoom-out as it is revealed
     u.uTex2.value = this.textures[index]
     u.uRes2.value = this.sizes[index]
     u.uDim2.value = this.images[index].dim ?? 1
+    u.uFocusX2.value = this.images[index].focusX
+    gsap.fromTo(u.uZoom2, { value: ENTER_ZOOM }, { value: REST_ZOOM, duration: 7, ease: 'power2.out' })
+
     u.uProgress.value = 0
-    gsap.killTweensOf(u.uProgress)
     gsap.to(u.uProgress, { value: 1, duration, ease: 'power3.inOut' })
-    gsap.to(u.uFocusX, { value: this.images[index].focusX, duration, ease: 'power3.inOut' })
-    gsap.fromTo(u.uZoom, { value: 1.14 }, { value: 1.04, duration: 7, ease: 'power2.out' })
     this.current = index
   }
 
   intro() {
-    gsap.fromTo(this.material.uniforms.uZoom, { value: 1.35 }, { value: 1.04, duration: 3.4, ease: 'expo.out' })
+    const u = this.material.uniforms
+    gsap.fromTo([u.uZoom1, u.uZoom2], { value: 1.35 }, { value: REST_ZOOM, duration: 3.4, ease: 'expo.out' })
   }
 
   private onPointer = (e: PointerEvent) => {

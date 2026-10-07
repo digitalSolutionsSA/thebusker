@@ -11,10 +11,8 @@ export const site = {
     lines: ['1 Club Street, Peacehaven', 'Vereeniging (Old Barnyard)', 'South Africa'],
     mapsQuery: '1 Club Street, Peacehaven, Vereeniging, South Africa',
   },
-  // TODO: confirm — the old footer listed "074 000 0002", which looks like a placeholder.
-  phone: '074 000 0002',
-  // TODO: confirm — the old footer read "thebusker.theatregmail.com" (missing "@").
-  email: 'thebusker.theatre@gmail.com',
+  phone: '074 000 0082',
+  email: 'info@thebusker.co.za',
   hours: 'Varies per event — see the show listings',
   // Add profile URLs to show social icons in the footer and contact page.
   socials: [] as { label: 'Facebook' | 'Instagram' | 'TikTok' | 'YouTube'; href: string }[],

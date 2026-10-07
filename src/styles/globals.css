@@ -233,6 +233,12 @@
   100% { transform: translateY(200%); }
 }
 
+/* Hero poster deck: time left before the next show is dealt to the front */
+@keyframes deckprogress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
 /* ---------- Custom cursor ---------- */
 .cursor-dot,
 .cursor-ring {

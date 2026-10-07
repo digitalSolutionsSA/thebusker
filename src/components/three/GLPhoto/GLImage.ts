@@ -159,8 +159,13 @@ export class GLImage {
     const w = this.host.clientWidth
     const h = this.host.clientHeight
     if (!w || !h) return
+    const view = this.mat.uniforms.uView.value as THREE.Vector2
+    if (view.x === w && view.y === h) return
     this.renderer.setSize(w, h, false)
-    this.mat.uniforms.uView.value.set(w, h)
+    view.set(w, h)
+    // Resizing wipes the canvas, and ResizeObserver fires after this frame's render — draw again
+    // now or the photo flashes black on every frame of a size change (e.g. the pillars widening on hover)
+    if (this.texture) this.renderer.render(this.scene, this.camera)
   }
 
   private tick = () => {
