@@ -1,7 +1,28 @@
 import type { Show } from '../types'
+import { seatCategory, type SeatCategory } from '../data/venueLayout'
 
 export const formatPrice = (cents: number, currency = 'ZAR') =>
   new Intl.NumberFormat('en-ZA', { style: 'currency', currency }).format(cents / 100)
+
+type PricedShow = Pick<Show, 'price_cents' | 'seating' | 'price_table_cents' | 'price_single_cents' | 'price_upstairs_cents'>
+
+/** Price of one seat of a ticket type (seating-plan shows); unset types use the show's main price */
+export function categoryPrice(show: PricedShow, category: SeatCategory): number {
+  const byType = { table: show.price_table_cents, single: show.price_single_cents, upstairs: show.price_upstairs_cents }[category]
+  return byType ?? show.price_cents
+}
+
+/** Total for a set of seats, each at its own ticket type's price (mirrors seats_total_cents in the database) */
+export const seatsTotal = (show: PricedShow, seatIds: string[]) =>
+  seatIds.reduce((sum, id) => sum + categoryPrice(show, seatCategory(id)), 0)
+
+/** "R 150,00" — or "From R 120,00" when a seating-plan show has different ticket prices */
+export function priceLabel(show: PricedShow & { currency: string }): string {
+  if (show.seating === 'general') return formatPrice(show.price_cents, show.currency)
+  const prices = (['table', 'single', 'upstairs'] as const).map((c) => categoryPrice(show, c))
+  const min = Math.min(...prices)
+  return `${min === Math.max(...prices) ? '' : 'From '}${formatPrice(min, show.currency)}`
+}
 
 /** Short booking code customers see after paying and can quote at the door (first 8 of the booking id) */
 export const bookingRef = (id: string) => id.replace(/-/g, '').slice(0, 8).toUpperCase()

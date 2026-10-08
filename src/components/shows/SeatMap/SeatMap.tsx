@@ -1,13 +1,21 @@
 import type { KeyboardEvent } from 'react'
-import { SEAT_SIZE, type Floor, type SeatSpot } from '../../../data/venueLayout'
+import { SEAT_SIZE, seatsById, type Floor, type SeatSpot } from '../../../data/venueLayout'
+
+/** onToggle id for "select every free seat at this table" in seat-by-seat mode */
+export const TABLE_PREFIX = 'table:'
 
 interface Props {
   floor: Floor
   /** Seat ids that are sold or held */
   taken: Set<string>
-  /** Selected table ids and single seat ids */
+  /**
+   * Selected units. 'whole' mode: table ids and single seat ids. 'seats' mode: seat ids only
+   * (tapping a table top calls onToggle with `${TABLE_PREFIX}${tableId}`).
+   */
   selected: Set<string>
   onToggle: (id: string) => void
+  /** Whether tables are sold whole (default) or seat by seat */
+  tableMode?: 'whole' | 'seats'
 }
 
 type State = 'free' | 'selected' | 'taken'
@@ -40,8 +48,8 @@ function Seat({ spot, state }: { spot: SeatSpot; state: State }) {
   )
 }
 
-/** Hall plan: tap a table to book all its seats, or a single seat along the walls and upstairs. */
-export default function SeatMap({ floor, taken, selected, onToggle }: Props) {
+/** Hall plan: tap a table to book all its seats (or single seats at it), or a single seat along the walls and upstairs. */
+export default function SeatMap({ floor, taken, selected, onToggle, tableMode = 'whole' }: Props) {
   const interactive = (id: string, state: State, label: string) => ({
     role: 'button',
     tabIndex: state === 'taken' ? -1 : 0,
@@ -62,7 +70,53 @@ export default function SeatMap({ floor, taken, selected, onToggle }: Props) {
     <svg viewBox={floor.viewBox} className="block h-auto w-full select-none" aria-label={`${floor.name} seating plan`}>
       {floor.id === 'downstairs' ? <DownstairsDecor /> : <UpstairsDecor />}
 
-      {floor.tables.map((t) => {
+      {tableMode === 'seats' &&
+        floor.tables.map((t) => {
+          // Seat-by-seat tables: each seat is its own button; the table top picks all its free seats
+          const free = t.seats.filter((s) => !taken.has(s.id))
+          const tableState: State = free.length === 0 ? 'taken' : free.every((s) => selected.has(s.id)) ? 'selected' : 'free'
+          const tableLabel = `${t.label}: ${free.length} of ${t.seats.length} seats free`
+          return (
+            <g key={t.id}>
+              <g {...interactive(`${TABLE_PREFIX}${t.id}`, tableState, `${tableLabel}. Select all free seats`)}>
+                <title>{tableLabel}</title>
+                <rect
+                  x={t.cx - t.w / 2}
+                  y={t.cy - t.h / 2}
+                  width={t.w}
+                  height={t.h}
+                  rx={4}
+                  strokeWidth={1.5}
+                  transform={t.rotate ? `rotate(${t.rotate} ${t.cx} ${t.cy})` : undefined}
+                  className={`transition-colors ${tableClass[tableState]}`}
+                />
+                <text
+                  x={t.cx}
+                  y={t.cy}
+                  textAnchor="middle"
+                  dominantBaseline="central"
+                  transform={t.rotate ? `rotate(${t.rotate} ${t.cx} ${t.cy})` : undefined}
+                  className={`pointer-events-none text-[11px] font-semibold ${tableState === 'taken' ? 'fill-white/20' : 'fill-mist'}`}
+                >
+                  {t.id}
+                </text>
+              </g>
+              {t.seats.map((s) => {
+                const state: State = taken.has(s.id) ? 'taken' : selected.has(s.id) ? 'selected' : 'free'
+                const label = `${seatsById.get(s.id)?.label ?? s.id}${state === 'taken' ? ', booked' : ''}`
+                return (
+                  <g key={s.id} {...interactive(s.id, state, label)}>
+                    <title>{label}</title>
+                    <rect x={s.x - 11} y={s.y - 11} width={22} height={22} fill="transparent" />
+                    <Seat spot={s} state={state} />
+                  </g>
+                )
+              })}
+            </g>
+          )
+        })}
+
+      {tableMode === 'whole' && floor.tables.map((t) => {
         const state: State = t.seats.some((s) => taken.has(s.id)) ? 'taken' : selected.has(t.id) ? 'selected' : 'free'
         const label = `${t.label}, ${t.seats.length} seats${state === 'taken' ? ', booked' : ''}`
         return (

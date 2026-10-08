@@ -56,7 +56,7 @@ export async function fetchTakenSeats(showId: string): Promise<string[]> {
   return (data ?? []) as string[]
 }
 
-type CheckoutResult = { url: string } | { error: string; takenSeats?: string[] }
+type CheckoutResult = { url: string } | { error: string; takenSeats?: string[]; ticketsLeft?: number }
 
 /** Holds the seats and returns the Yoco payment page to send the customer to */
 export async function createCheckoutSession(params: BookingRequest): Promise<CheckoutResult> {
@@ -74,6 +74,7 @@ export async function createCheckoutSession(params: BookingRequest): Promise<Che
     return {
       error: body?.error ?? error.message ?? 'Something went wrong creating your booking.',
       takenSeats: body?.takenSeats,
+      ticketsLeft: body?.ticketsLeft,
     }
   }
 

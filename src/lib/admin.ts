@@ -73,6 +73,16 @@ export interface ShowInput {
   category: ShowCategory
   image_url: string | null
   is_published: boolean
+  /** 'reserved' sells the seating plan; 'general' sells `capacity` tickets without seats */
+  seating: 'reserved' | 'general'
+  /** Ticket limit, used for general admission (seat-map shows always sell the whole plan) */
+  capacity: number
+  /** Seating-plan ticket types (null on general-admission shows). price_cents is kept at the lowest. */
+  price_table_cents: number | null
+  price_single_cents: number | null
+  price_upstairs_cents: number | null
+  /** Tables sold whole, or seat by seat */
+  table_mode: 'whole' | 'seats'
 }
 
 const slugify = (s: string) =>
@@ -86,10 +96,24 @@ const slugify = (s: string) =>
     .slice(0, 60)
 
 export async function saveShow(input: ShowInput, id?: string): Promise<Show> {
+  // Seat-map shows sell the whole venue, so their capacity is the number of seats in the plan
+  let capacity = input.capacity
+  if (input.seating === 'reserved') {
+    // The website shows "from" the cheapest ticket type
+    const tiers = [input.price_table_cents, input.price_single_cents, input.price_upstairs_cents].filter((p): p is number => p !== null)
+    if (tiers.length) input = { ...input, price_cents: Math.min(...tiers) }
+  } else {
+    input = { ...input, price_table_cents: null, price_single_cents: null, price_upstairs_cents: null }
+  }
+  if (input.seating === 'reserved') {
+    const { count } = await db().from('venue_seats').select('id', { count: 'exact', head: true })
+    capacity = count ?? 0
+  }
+
   if (id) {
     const { data, error } = await db()
       .from('shows')
-      .update({ ...input, updated_at: new Date().toISOString() })
+      .update({ ...input, capacity, updated_at: new Date().toISOString() })
       .eq('id', id)
       .select()
       .single()
@@ -97,15 +121,13 @@ export async function saveShow(input: ShowInput, id?: string): Promise<Show> {
     return data as Show
   }
 
-  // New show: every show sells the whole venue, so capacity = number of seats in the plan
-  const { count } = await db().from('venue_seats').select('id', { count: 'exact', head: true })
   let slug = slugify(input.title) || 'show'
   const { data: clash } = await db().from('shows').select('id').eq('slug', slug).maybeSingle()
   if (clash) slug = `${slug}-${input.date}`
 
   const { data, error } = await db()
     .from('shows')
-    .insert({ ...input, slug, currency: 'ZAR', capacity: count ?? 0 })
+    .insert({ ...input, capacity, slug, currency: 'ZAR' })
     .select()
     .single()
   fail(error)
@@ -153,7 +175,10 @@ export async function cancelBooking(bookingId: string) {
 
 export interface ManualSaleInput {
   showId: string
+  /** Seat-map shows */
   seatIds: string[]
+  /** General-admission shows */
+  quantity?: number
   name: string
   phone: string
   email: string
@@ -174,6 +199,7 @@ export async function createManualBooking(input: ManualSaleInput): Promise<strin
     p_paid: input.paid,
     p_amount_cents: input.amountCents,
     p_notes: input.notes,
+    p_quantity: input.quantity ?? null,
   })
   fail(error)
   return data as string

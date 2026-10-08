@@ -2,21 +2,19 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { ArrowRight, Lock, X } from 'lucide-react'
 import type { Show } from '../../../types'
 import { createCheckoutSession } from '../../../lib/api'
-import { formatPrice } from '../../../lib/format'
-import { floors, seatsById, tablesById, type FloorId } from '../../../data/venueLayout'
+import { categoryPrice, formatPrice, seatsTotal } from '../../../lib/format'
+import { seatsOf, toggleUnit, unitLabel as labelOf } from '../../../lib/seatSelection'
+import { floors, tablesById, type FloorId } from '../../../data/venueLayout'
 import { useTakenSeats } from '../../../hooks/useTakenSeats'
 import { useInView } from '../../../hooks/useInView'
 import Button from '../../ui/Button'
 import FormField from '../../ui/FormField'
 import SeatMap from '../SeatMap'
 
-/** Seat ids behind a selected table or single seat */
-const seatsOf = (id: string) => tablesById.get(id)?.seats.map((s) => s.id) ?? [id]
-const labelOf = (id: string) => tablesById.get(id)?.label ?? seatsById.get(id)?.label ?? id
-
 /** Pick tables / seats on the hall plan, add contact details, then pay on Yoco. */
 export default function BookingPanel({ show }: { show: Show }) {
   const bok = show.category === 'bok-town'
+  const tableMode = show.table_mode ?? 'whole'
   const { taken, refresh, markTaken } = useTakenSeats(show.id)
 
   const [floorId, setFloorId] = useState<FloorId>('downstairs')
@@ -30,7 +28,13 @@ export default function BookingPanel({ show }: { show: Show }) {
 
   const floor = floors.find((f) => f.id === floorId)!
   const seatIds = useMemo(() => [...selected].flatMap(seatsOf), [selected])
-  const total = formatPrice(show.price_cents * seatIds.length, show.currency)
+  const total = formatPrice(seatsTotal(show, seatIds), show.currency)
+  const prices = [
+    { label: tableMode === 'whole' ? 'Table seats' : 'Seats at tables', cents: categoryPrice(show, 'table') },
+    { label: 'Single seats', cents: categoryPrice(show, 'single') },
+    { label: 'Upstairs', cents: categoryPrice(show, 'upstairs') },
+  ]
+  const onePrice = prices.every((p) => p.cents === prices[0].cents)
 
   // Someone else got there first: drop those picks and say so
   useEffect(() => {
@@ -43,12 +47,7 @@ export default function BookingPanel({ show }: { show: Show }) {
 
   const toggle = (id: string) => {
     setError(null)
-    setSelected((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
+    setSelected((prev) => toggleUnit(prev, id, taken))
   }
 
   const handleSubmit = async (e: FormEvent) => {
@@ -100,14 +99,16 @@ export default function BookingPanel({ show }: { show: Show }) {
 
         <p className="mb-2 px-1 text-xs text-mist">
           {floorId === 'downstairs'
-            ? 'Tap a table to book the whole table, or tap a single seat along the walls and boxes.'
+            ? tableMode === 'whole'
+              ? 'Tap a table to book the whole table, or tap a single seat along the walls and boxes.'
+              : 'Tap the seats you want, at a table or along the walls. Tap a table to take all its free seats.'
             : 'The balcony seats are booked one by one — tap the seats you want.'}
           <span className="sm:hidden"> Swipe sideways to see the whole hall.</span>
         </p>
 
         <div className="-mx-1 overflow-x-auto">
           <div className={floorId === 'downstairs' ? 'min-w-[640px] sm:min-w-0' : ''}>
-            <SeatMap floor={floor} taken={taken} selected={selected} onToggle={toggle} />
+            <SeatMap floor={floor} taken={taken} selected={selected} onToggle={toggle} tableMode={tableMode} />
           </div>
         </div>
       </div>
@@ -140,10 +141,21 @@ export default function BookingPanel({ show }: { show: Show }) {
               ))}
             </ul>
           )}
-          <p className="mt-3 text-xs text-mist">
-            {formatPrice(show.price_cents, show.currency)} per seat
-            {seatIds.length > 0 && ` · ${seatIds.length} seat${seatIds.length === 1 ? '' : 's'}`}
-          </p>
+          {onePrice ? (
+            <p className="mt-3 text-xs text-mist">
+              {formatPrice(prices[0].cents, show.currency)} per seat
+              {seatIds.length > 0 && ` · ${seatIds.length} seat${seatIds.length === 1 ? '' : 's'}`}
+            </p>
+          ) : (
+            <ul className="mt-3 space-y-0.5 text-xs text-mist">
+              {prices.map((p) => (
+                <li key={p.label} className="flex justify-between gap-4">
+                  <span>{p.label}</span>
+                  <span className="tabular-nums text-ivory/80">{formatPrice(p.cents, show.currency)} each</span>
+                </li>
+              ))}
+            </ul>
+          )}
           {bok && <p className="mt-1 text-xs text-mist">Includes a platter, Castle Double Malt &amp; a Springbokkie.</p>}
         </div>
 

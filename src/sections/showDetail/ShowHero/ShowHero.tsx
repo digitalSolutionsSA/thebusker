@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowDown, ArrowLeft, CalendarDays, Clock, Ticket } from 'lucide-react'
 import type { Show } from '../../../types'
-import { formatLongDate, formatPrice, showStart, ticketsRemaining } from '../../../lib/format'
+import { formatLongDate, showStart, ticketsRemaining, priceLabel } from '../../../lib/format'
 import { gsap, prefersReducedMotion } from '../../../lib/gsap'
 import { introReady, registerAsset } from '../../../lib/intro'
 import { images } from '../../../data/images'
@@ -150,7 +150,7 @@ export default function ShowHero({ show }: { show: Show }) {
               <Clock size={14} className="text-gold" /> From {show.doors_time}
             </li>
             <li className="flex items-center gap-2 rounded-full border border-gold/30 bg-night/50 px-4 py-2 backdrop-blur">
-              <Ticket size={14} className="text-gold" /> {formatPrice(show.price_cents, show.currency)} pp
+              <Ticket size={14} className="text-gold" /> {priceLabel(show)} pp
             </li>
           </ul>
 

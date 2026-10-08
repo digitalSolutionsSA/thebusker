@@ -2,7 +2,7 @@ import { useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
 import { useShows } from '../../../hooks/useShows'
-import { formatDay, formatMonth, formatPrice } from '../../../lib/format'
+import { formatDay, formatMonth, priceLabel } from '../../../lib/format'
 import { gsap, useGSAP, ScrollTrigger, prefersReducedMotion } from '../../../lib/gsap'
 import ShowPoster from '../../../components/shows/ShowPoster'
 
@@ -107,7 +107,7 @@ export default function ShowsTrack({ excludeSlug, thin = "What's", heavy = 'On S
                   <div className="min-w-0 border-l border-gold/25 pl-4">
                     <h3 className="font-display text-lg uppercase leading-tight text-ivory group-hover:text-gold">{show.title}</h3>
                     <p className="mt-1 text-xs text-mist">
-                      From {show.doors_time} · {formatPrice(show.price_cents, show.currency)}
+                      From {show.doors_time} · {priceLabel(show)}
                     </p>
                   </div>
                 </div>

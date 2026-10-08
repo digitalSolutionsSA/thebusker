@@ -4,6 +4,7 @@ import { supabase } from '../../../lib/supabase'
 import { useStaffSession } from '../../../hooks/useStaffSession'
 import { adminInput, adminLabel, btnGold } from '../../../components/admin/ui'
 import { ADMIN_BASE } from '../../../config/site'
+import Logo from '../../../components/ui/Logo'
 
 /** Staff sign-in for the admin portal, with a "forgot password" email link. */
 export default function AdminLogin() {
@@ -43,9 +44,8 @@ export default function AdminLogin() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-night px-5 text-ivory">
       <form onSubmit={signIn} className="w-full max-w-sm">
-        <p className="text-center font-display text-2xl uppercase tracking-[0.12em] text-gold">
-          Busker <span className="text-ivory/50">Admin</span>
-        </p>
+        <Logo eager className="mx-auto w-48" />
+        <p className="mt-4 text-center text-[0.65rem] font-semibold uppercase tracking-[0.3em] text-gold">Admin portal</p>
         <p className="mt-2 text-center text-sm text-mist">Sign in to manage shows and guest lists.</p>
 
         <div className="mt-8 space-y-4">

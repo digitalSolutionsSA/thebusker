@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { DoorOpen, Pencil, Plus } from 'lucide-react'
 import type { Show } from '../../../types'
 import { listAllShows } from '../../../lib/admin'
-import { formatLongDate, formatPrice } from '../../../lib/format'
+import { formatLongDate, priceLabel } from '../../../lib/format'
 import ShowPoster from '../../../components/shows/ShowPoster'
 import { adminCard, badge, btnGold, btnOutline } from '../../../components/admin/ui'
 import { ADMIN_BASE } from '../../../config/site'
@@ -78,14 +78,14 @@ function ShowRow({ show, tonight = false }: { show: Show; tonight?: boolean }) {
           </div>
           <p className="mt-1 truncate font-display text-lg uppercase leading-tight text-ivory">{show.title}</p>
           <p className="text-xs text-mist">
-            {formatLongDate(show.date)} · {show.doors_time} · {formatPrice(show.price_cents, show.currency)} per seat
+            {formatLongDate(show.date)} · {show.doors_time} · {priceLabel(show)} {show.seating === 'general' ? 'per ticket' : 'per seat'}
           </p>
           <div className="mt-2 flex items-center gap-3">
             <div className="h-1.5 w-32 overflow-hidden rounded-full bg-white/10">
               <div className="h-full rounded-full bg-gold" style={{ width: `${pct}%` }} />
             </div>
             <span className="text-xs tabular-nums text-ivory/80">
-              {show.tickets_sold} / {show.capacity} seats sold
+              {show.tickets_sold} / {show.capacity} {show.seating === 'general' ? 'tickets' : 'seats'} sold
             </span>
           </div>
         </div>

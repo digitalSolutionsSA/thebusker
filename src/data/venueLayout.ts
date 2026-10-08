@@ -221,6 +221,15 @@ export const allSeats: SeatInfo[] = floors.flatMap((f) => [
 export const tablesById = new Map(floors.flatMap((f) => f.tables.map((t) => [t.id, t] as const)))
 export const seatsById = new Map(allSeats.map((s) => [s.id, s]))
 
+/** Ticket type of a seat, which decides its price (see priceForSeat in lib/format) */
+export type SeatCategory = 'table' | 'single' | 'upstairs'
+
+export function seatCategory(seatId: string): SeatCategory {
+  const seat = seatsById.get(seatId)
+  if (seat?.floor === 'upstairs') return 'upstairs'
+  return seat?.tableId ? 'table' : 'single'
+}
+
 /** Human-readable seats for a booking: whole tables by name, then single seats ("Table A3", "Box SC seat 4") */
 export function describeSeats(seatIds: string[]): string[] {
   const tables = new Set<string>()

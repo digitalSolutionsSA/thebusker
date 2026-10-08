@@ -2,14 +2,13 @@ import { useMemo, useState, type FormEvent } from 'react'
 import { X } from 'lucide-react'
 import type { Show } from '../../../types'
 import { createManualBooking, sourceLabels, type BookingSource } from '../../../lib/admin'
-import { formatPrice } from '../../../lib/format'
-import { floors, seatsById, tablesById, type FloorId } from '../../../data/venueLayout'
+import { formatPrice, seatsTotal } from '../../../lib/format'
+import { seatsOf, toggleUnit, unitLabel as labelOf } from '../../../lib/seatSelection'
+import { floors, type FloorId } from '../../../data/venueLayout'
 import { useTakenSeats } from '../../../hooks/useTakenSeats'
 import SeatMap from '../../../components/shows/SeatMap'
 import { adminInput, adminLabel, btnGold, btnOutline } from '../../../components/admin/ui'
 
-const seatsOf = (id: string) => tablesById.get(id)?.seats.map((s) => s.id) ?? [id]
-const labelOf = (id: string) => tablesById.get(id)?.label ?? seatsById.get(id)?.label ?? id
 const manualSources: BookingSource[] = ['phone', 'whatsapp', 'pharmacy', 'door', 'other']
 
 /**
@@ -30,27 +29,40 @@ export default function ManualSale({ show, onClose, onSaved }: { show: Show; onC
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // General admission: a ticket count instead of seats
+  const general = show.seating === 'general'
+  const [quantity, setQuantity] = useState(1)
+  const ticketsLeft = Math.max(0, show.capacity - show.tickets_sold)
+
   const floor = floors.find((f) => f.id === floorId)!
   const seatIds = useMemo(() => [...selected].flatMap(seatsOf), [selected])
-  const defaultAmount = ((show.price_cents * seatIds.length) / 100).toFixed(2)
+  const count = general ? quantity : seatIds.length
+  // Seating-plan shows: each seat at its ticket type price (table / single / upstairs)
+  const defaultAmount = ((general ? show.price_cents * count : seatsTotal(show, seatIds)) / 100).toFixed(2)
 
-  const toggle = (id: string) =>
-    setSelected((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
+  const toggle = (id: string) => setSelected((prev) => toggleUnit(prev, id, taken))
 
   const submit = async (e: FormEvent) => {
     e.preventDefault()
-    if (seatIds.length === 0) return setError('Tap the seats or table on the plan first.')
+    if (!general && seatIds.length === 0) return setError('Tap the seats or table on the plan first.')
+    if (general && !(quantity > 0)) return setError('Enter how many tickets.')
     const rands = Number((amount ?? defaultAmount).replace(',', '.'))
     if (!Number.isFinite(rands) || rands < 0) return setError('Enter the amount in rand.')
     setBusy(true)
     setError(null)
     try {
-      await createManualBooking({ showId: show.id, seatIds, name, phone, email, source, paid, amountCents: Math.round(rands * 100), notes })
+      await createManualBooking({
+        showId: show.id,
+        seatIds: general ? [] : seatIds,
+        quantity: general ? quantity : undefined,
+        name,
+        phone,
+        email,
+        source,
+        paid,
+        amountCents: Math.round(rands * 100),
+        notes,
+      })
       onSaved()
     } catch (err) {
       const message = (err as Error).message
@@ -77,7 +89,8 @@ export default function ManualSale({ show, onClose, onSaved }: { show: Show; onC
           </button>
         </div>
 
-        <div className="mt-6 grid gap-6 lg:grid-cols-[1.5fr_1fr] lg:items-start">
+        <div className={`mt-6 grid gap-6 ${general ? 'max-w-xl' : 'lg:grid-cols-[1.5fr_1fr] lg:items-start'}`}>
+          {!general && (
           <div className="min-w-0 rounded-2xl border border-white/10 bg-night-2/80 p-3 sm:p-5">
             <div className="mb-3 flex rounded-full border border-white/10 p-1" role="tablist" aria-label="Floor">
               {floors.map((f) => (
@@ -95,22 +108,45 @@ export default function ManualSale({ show, onClose, onSaved }: { show: Show; onC
             </div>
             <div className="-mx-1 overflow-x-auto">
               <div className={floorId === 'downstairs' ? 'min-w-[620px] sm:min-w-0' : ''}>
-                <SeatMap floor={floor} taken={taken} selected={selected} onToggle={toggle} />
+                <SeatMap floor={floor} taken={taken} selected={selected} onToggle={toggle} tableMode={show.table_mode ?? 'whole'} />
               </div>
             </div>
           </div>
+          )}
 
           <div className="space-y-4">
-            <div>
-              <span className={adminLabel}>Seats</span>
-              {selected.size === 0 ? (
-                <p className="text-sm text-mist">Tap a table or seats on the plan.</p>
-              ) : (
-                <p className="text-sm text-ivory">
-                  {[...selected].map(labelOf).join(', ')} · <span className="text-mist">{seatIds.length} seats</span>
-                </p>
-              )}
-            </div>
+            {general ? (
+              <div>
+                <span className={adminLabel}>Tickets</span>
+                <div className="flex items-center gap-3">
+                  <button type="button" onClick={() => setQuantity((q) => Math.max(1, q - 1))} className="grid h-12 w-12 place-items-center rounded-xl border border-white/15 text-xl hover:border-gold" aria-label="One fewer ticket">
+                    −
+                  </button>
+                  <input
+                    inputMode="numeric"
+                    value={quantity}
+                    onChange={(e) => setQuantity(Math.max(0, Number(e.target.value.replace(/\D/g, '')) || 0))}
+                    className={`${adminInput} w-20 text-center font-display text-xl`}
+                    aria-label="Number of tickets"
+                  />
+                  <button type="button" onClick={() => setQuantity((q) => q + 1)} className="grid h-12 w-12 place-items-center rounded-xl border border-white/15 text-xl hover:border-gold" aria-label="One more ticket">
+                    +
+                  </button>
+                </div>
+                <p className="mt-2 text-xs text-mist">About {ticketsLeft} of {show.capacity} tickets left (general admission).</p>
+              </div>
+            ) : (
+              <div>
+                <span className={adminLabel}>Seats</span>
+                {selected.size === 0 ? (
+                  <p className="text-sm text-mist">Tap a table or seats on the plan.</p>
+                ) : (
+                  <p className="text-sm text-ivory">
+                    {[...selected].map(labelOf).join(', ')} · <span className="text-mist">{seatIds.length} seats</span>
+                  </p>
+                )}
+              </div>
+            )}
             <div>
               <label htmlFor="ms-name" className={adminLabel}>Buyer's name *</label>
               <input id="ms-name" required value={name} onChange={(e) => setName(e.target.value)} className={adminInput} />
@@ -155,7 +191,7 @@ export default function ManualSale({ show, onClose, onSaved }: { show: Show; onC
               <label htmlFor="ms-amount" className={adminLabel}>Amount (R)</label>
               <input id="ms-amount" inputMode="decimal" value={amount ?? defaultAmount} onChange={(e) => setAmount(e.target.value)} className={adminInput} />
               <p className="mt-1 text-xs text-mist">
-                {formatPrice(show.price_cents, show.currency)} per seat. Change it for a discount or complimentary tickets.
+                {general ? `${formatPrice(show.price_cents, show.currency)} per ticket` : 'Worked out from the seat prices'}. Change it for a discount or complimentary tickets.
               </p>
             </div>
             <div>

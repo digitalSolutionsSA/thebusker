@@ -2,7 +2,7 @@ import { useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
 import type { Show } from '../../../types'
-import { formatDay, formatMonth, formatPrice, isSellingFast, ticketsRemaining } from '../../../lib/format'
+import { formatDay, formatMonth, isSellingFast, ticketsRemaining, priceLabel } from '../../../lib/format'
 import { gsap, useGSAP, prefersReducedMotion } from '../../../lib/gsap'
 import ShowPoster from '../ShowPoster'
 
@@ -101,7 +101,7 @@ export default function ShowCard({ show }: Props) {
             <div className="min-w-0 border-l border-white/10 pl-4">
               <h3 className="font-display text-lg uppercase leading-tight text-balance">{show.title}</h3>
               <p className="mt-1 text-xs text-mist">
-                From {show.doors_time} · {formatPrice(show.price_cents, show.currency)}
+                From {show.doors_time} · {priceLabel(show)}
               </p>
             </div>
           </div>

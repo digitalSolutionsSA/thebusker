@@ -155,13 +155,13 @@ export default function AdminShowGuests() {
       {/* At a glance */}
       <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat label="Checked in" value={`${stats.arrivedSeats} / ${stats.seats}`} hint={`people · ${stats.arrivedBookings} of ${stats.bookings} bookings`} highlight />
-        <Stat label="Seats sold" value={`${stats.seats} / ${show.capacity}`} hint={`${stats.paidSeats} paid · ${stats.reservedSeats} reserved`} />
+        <Stat label={show.seating === 'general' ? 'Tickets sold' : 'Seats sold'} value={`${stats.seats} / ${show.capacity}`} hint={`${stats.paidSeats} paid · ${stats.reservedSeats} reserved`} />
         <Stat label="Paid" value={formatPrice(stats.revenue, show.currency)} hint="online and recorded sales" />
         <Stat label="Still to pay" value={formatPrice(stats.owed, show.currency)} hint={`${stats.reservedSeats} reserved seats`} />
       </div>
 
       {/* Search + filters stay in reach while scrolling the list at the door */}
-      <div className="sticky top-[57px] z-20 -mx-4 mt-6 border-b border-white/10 bg-night/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6">
+      <div className="sticky top-[65px] z-20 -mx-4 mt-6 border-b border-white/10 bg-night/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6">
         <div className="relative">
           <Search size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-mist" />
           <input
@@ -269,7 +269,15 @@ function BookingCard({
             {arrived && <span className={`${badge} bg-emerald-500 text-white`}>In {new Date(b.checked_in_at!).toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit' })}</span>}
           </div>
           <p className="mt-1 text-sm text-ivory/85">
-            <span className="font-semibold">{b.quantity} {b.quantity === 1 ? 'seat' : 'seats'}</span> · {describeSeats(b.seat_ids).join(', ') || 'No seats'}
+            {b.seat_ids.length > 0 ? (
+              <>
+                <span className="font-semibold">{b.quantity} {b.quantity === 1 ? 'seat' : 'seats'}</span> · {describeSeats(b.seat_ids).join(', ')}
+              </>
+            ) : (
+              <>
+                <span className="font-semibold">{b.quantity} {b.quantity === 1 ? 'ticket' : 'tickets'}</span> · General admission
+              </>
+            )}
           </p>
           <p className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-mist">
             <span>Ref {bookingRef(b.id)}</span>

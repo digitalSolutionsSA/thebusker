@@ -4,10 +4,12 @@ import { mapsUrl, site } from '../../../config/site'
 import { formatShortDate } from '../../../lib/format'
 import { useSectionReveal } from '../../../hooks/useSectionReveal'
 import BookingPanel from '../../../components/shows/BookingPanel'
+import TicketPanel from '../../../components/shows/TicketPanel'
 
-/** Seat booking first (plan + order form), show details after, so buying takes as little scrolling as possible. */
+/** Booking first (seat plan or ticket count + order form), show details after, so buying takes as little scrolling as possible. */
 export default function ShowBooking({ show }: { show: Show }) {
   const root = useSectionReveal<HTMLElement>([show.id])
+  const general = show.seating === 'general'
 
   return (
     <section ref={root} id="book" className="relative scroll-mt-24 py-16 sm:py-24">
@@ -22,19 +24,23 @@ export default function ShowBooking({ show }: { show: Show }) {
           {show.title} · {formatShortDate(show.date)} · from {show.doors_time}
         </p>
 
-        <BookingPanel key={show.id} show={show} />
+        {/* Seat-map shows pick seats; general admission (e.g. club nights) just picks a ticket count */}
+        {general ? <TicketPanel key={show.id} show={show} /> : <BookingPanel key={show.id} show={show} />}
 
-        <p data-sr="up" className="mt-10 max-w-2xl font-serif text-lg leading-relaxed text-ivory/80">
-          {show.description}
-        </p>
-        <a
-          href={mapsUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-4 inline-flex items-center gap-2 text-xs text-ivory/60 hover:text-gold"
-        >
-          <MapPin size={14} className="text-gold" /> {site.name} · {site.address.lines[1]}
-        </a>
+        <div className={general ? 'mx-auto max-w-xl' : ''}>
+          {/* pre-line keeps the line breaks typed in the admin portal */}
+          <p data-sr="up" className="mt-10 max-w-2xl whitespace-pre-line font-serif text-lg leading-relaxed text-ivory/80">
+            {show.description}
+          </p>
+          <a
+            href={mapsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 inline-flex items-center gap-2 text-xs text-ivory/60 hover:text-gold"
+          >
+            <MapPin size={14} className="text-gold" /> {site.name} · {site.address.lines[1]}
+          </a>
+        </div>
       </div>
     </section>
   )

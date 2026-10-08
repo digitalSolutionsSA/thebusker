@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
 import type { Show } from '../../../types'
 import { parseFixture } from '../../../data/teams'
-import { formatPrice, formatShortDate, ticketsRemaining } from '../../../lib/format'
+import { formatShortDate, ticketsRemaining, priceLabel } from '../../../lib/format'
 import TeamBadge from '../../ui/TeamBadge'
 
 /** Match-day row on the Bok Town page: crests · date & teams · gold "Book a table". */
@@ -32,7 +32,7 @@ export default function FixtureCard({ show }: { show: Show }) {
         <h3 className="mt-1 font-display text-lg uppercase text-ivory">
           {fixture ? `${fixture.home.name} vs ${fixture.away.name}` : show.title}
         </h3>
-        <p className="mt-1 text-xs text-mist">{formatPrice(show.price_cents, show.currency)} pp · platter &amp; drinks included</p>
+        <p className="mt-1 text-xs text-mist">{priceLabel(show)} pp · platter &amp; drinks included</p>
       </div>
 
       <span

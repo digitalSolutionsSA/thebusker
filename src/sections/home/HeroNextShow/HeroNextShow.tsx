@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useShows } from '../../../hooks/useShows'
 import { useCountdown } from '../../../hooks/useCountdown'
-import { formatPrice, formatShortDate, showStart } from '../../../lib/format'
+import { formatShortDate, showStart, priceLabel } from '../../../lib/format'
 import { prefersReducedMotion } from '../../../lib/gsap'
 import PosterDeck from '../../../components/shows/PosterDeck'
 import type { Show } from '../../../types'
@@ -141,7 +141,7 @@ function PosterDetails({ show, visible, first }: { show: Show; visible: boolean;
           {show.title}
         </Link>
         <p className="mt-1 text-xs text-mist">
-          {formatShortDate(show.date)} · From {show.doors_time} · {formatPrice(show.price_cents, show.currency)}
+          {formatShortDate(show.date)} · From {show.doors_time} · {priceLabel(show)}
         </p>
         {!bok && <MiniCountdown target={showStart(show)} />}
         <Link

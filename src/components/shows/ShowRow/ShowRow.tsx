@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
 import type { Show } from '../../../types'
-import { formatDay, formatMonth, formatPrice, ticketsRemaining } from '../../../lib/format'
+import { formatDay, formatMonth, ticketsRemaining, priceLabel } from '../../../lib/format'
 import ShowPoster from '../ShowPoster'
 
 /** Ticket-stub style row: date block · poster thumbnail · title & times · gold ticket button. */
@@ -31,7 +31,7 @@ export default function ShowRow({ show }: { show: Show }) {
       <div className="min-w-0 px-5 py-5 sm:px-7">
         <h3 className="font-display text-lg uppercase leading-tight text-ivory sm:text-2xl">{show.title}</h3>
         <p className="mt-2 text-[0.62rem] font-semibold uppercase tracking-[0.25em] text-mist">
-          Starts {show.doors_time} <span className="mx-2 text-gold/60">|</span> {formatPrice(show.price_cents, show.currency)} pp
+          Starts {show.doors_time} <span className="mx-2 text-gold/60">|</span> {priceLabel(show)} pp
         </p>
         <span className="mt-4 inline-flex items-center gap-2 rounded-full bg-[linear-gradient(115deg,#f6e3b0_0%,#d9b45c_35%,#a8842a_70%,#e2bd6d_100%)] px-5 py-2 text-[0.6rem] font-bold uppercase tracking-[0.2em] text-night sm:hidden">
           {soldOut ? 'Sold out' : 'Get tickets'} <ArrowRight size={12} />

@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { ArrowRight, ChevronLeft, ChevronRight, Clock, MapPin } from 'lucide-react'
 import type { Show } from '../../../types'
-import { formatLongDate, formatPrice, showStart } from '../../../lib/format'
+import { formatLongDate, showStart, priceLabel } from '../../../lib/format'
 import { stockPoster } from '../../../data/images'
 import { gsap, useGSAP, prefersReducedMotion } from '../../../lib/gsap'
 import { useReveal } from '../../../hooks/useReveal'
@@ -72,7 +72,7 @@ export default function NextShowSpotlight({ shows }: Props) {
               Book this show <ArrowRight size={16} />
             </Button>
             <span className="font-display text-3xl">
-              {formatPrice(show.price_cents, show.currency)} <span className="font-sans text-xs text-mist">pp</span>
+              {priceLabel(show)} <span className="font-sans text-xs text-mist">pp</span>
             </span>
           </div>
 
