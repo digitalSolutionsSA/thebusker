@@ -27,5 +27,11 @@ export const navLinks = [
   { to: '/contact', label: 'Contact' },
 ] as const
 
+/**
+ * Address of the staff portal. Deliberately not linked anywhere on the public site and kept out of
+ * search engines; change it here to move the portal (also update Supabase's password-reset redirect URL).
+ */
+export const ADMIN_BASE = '/dssa-portals'
+
 export const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(site.address.mapsQuery)}`
 export const mapsEmbedUrl = `https://www.google.com/maps?q=${encodeURIComponent(site.address.mapsQuery)}&output=embed`

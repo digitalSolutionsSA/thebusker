@@ -31,6 +31,8 @@ async function loadShows(): Promise<Show[]> {
   const { data, error } = await supabase
     .from('shows')
     .select('*')
+    // Hidden shows are readable by signed-in staff, but never belong on the public site
+    .eq('is_published', true)
     .gte('date', todayInSA())
     .order('date', { ascending: true })
 

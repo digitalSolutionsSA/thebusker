@@ -82,6 +82,26 @@ The old Stripe functions (`create-checkout-session`, `stripe-webhook`) are no lo
 
 ## Managing shows
 
-Add/edit rows directly in the `shows` table (Supabase table editor or SQL) — no code changes
-needed. Fields: `title`, `artist`, `description`, `date`, `doors_time`, `price_cents`, `currency`,
-`capacity`, `category` (`live-music` | `bok-town` | `special`), `image_url`.
+Use the staff portal at **`/dssa-portals`** (not linked from the site; the address is `ADMIN_BASE` in `src/config/site.ts`): add, edit, hide or delete shows (title, date, door time,
+price per seat, type, description, poster upload); see every booking per show; check guests in at
+the door; and record sales made outside the website (phone, WhatsApp, Euro Pharmacy, at the door)
+so those seats can't be sold online.
+
+### Giving someone access to the admin portal
+
+1. Supabase dashboard → Authentication → Users → **Add user** → *Create new user*: their email and
+   a password, with **Auto Confirm User** ticked.
+2. Grant them access in the SQL editor:
+   ```sql
+   insert into staff (user_id, email) select id, email from auth.users where email = 'them@example.com';
+   ```
+3. They sign in at `https://yourdomain.com/dssa-portals`. "Forgot password" emails them a reset link (set
+   the Site URL under Authentication → URL Configuration to the live domain, and add
+   `https://yourdomain.com/dssa-portals/set-password` to the redirect URLs).
+
+Turn off **Allow new users to sign up** (Authentication → Sign In / Providers) so nobody else can
+create an account. Accounts without a `staff` row can't see or change anything either way.
+
+Shows with sales can't be deleted (untick "Show on the website" to hide them instead).
+Cancelling an online booking frees its seats but doesn't refund the card payment: refund it in the
+Yoco portal.

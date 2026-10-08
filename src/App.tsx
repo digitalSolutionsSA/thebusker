@@ -1,6 +1,7 @@
-import { lazy } from 'react'
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import SiteLayout from './components/layout/SiteLayout'
+import { ADMIN_BASE } from './config/site'
 
 // Each page is its own chunk, so visitors only download what they open.
 const Home = lazy(() => import('./pages/Home'))
@@ -14,10 +15,27 @@ const BookingSuccess = lazy(() => import('./pages/BookingSuccess'))
 const BookingCancelled = lazy(() => import('./pages/BookingCancelled'))
 const NotFound = lazy(() => import('./pages/NotFound'))
 
+// Staff portal: separate chunks and no site chrome (preloader, WebGL, custom cursor)
+const AdminLayout = lazy(() => import('./components/admin/AdminLayout'))
+const AdminLogin = lazy(() => import('./pages/admin/AdminLogin'))
+const AdminSetPassword = lazy(() => import('./pages/admin/AdminSetPassword'))
+const AdminShows = lazy(() => import('./pages/admin/AdminShows'))
+const AdminShowEdit = lazy(() => import('./pages/admin/AdminShowEdit'))
+const AdminShowGuests = lazy(() => import('./pages/admin/AdminShowGuests'))
+
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path={`${ADMIN_BASE}/login`} element={<Suspense fallback={null}><AdminLogin /></Suspense>} />
+        <Route path={`${ADMIN_BASE}/set-password`} element={<Suspense fallback={null}><AdminSetPassword /></Suspense>} />
+        <Route path={ADMIN_BASE} element={<Suspense fallback={null}><AdminLayout /></Suspense>}>
+          <Route index element={<AdminShows />} />
+          <Route path="shows/new" element={<AdminShowEdit />} />
+          <Route path="shows/:id/edit" element={<AdminShowEdit />} />
+          <Route path="shows/:id/guests" element={<AdminShowGuests />} />
+        </Route>
+
         <Route element={<SiteLayout />}>
           <Route path="/" element={<Home />} />
           <Route path="/shows" element={<Shows />} />

@@ -15,6 +15,8 @@ export interface Show {
   tickets_sold: number
   category: ShowCategory
   stripe_price_id: string | null
+  /** Hidden shows (false) only appear in the admin portal */
+  is_published?: boolean
 }
 
 export interface BookingRequest {

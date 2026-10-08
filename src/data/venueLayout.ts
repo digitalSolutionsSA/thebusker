@@ -220,3 +220,15 @@ export const allSeats: SeatInfo[] = floors.flatMap((f) => [
 
 export const tablesById = new Map(floors.flatMap((f) => f.tables.map((t) => [t.id, t] as const)))
 export const seatsById = new Map(allSeats.map((s) => [s.id, s]))
+
+/** Human-readable seats for a booking: whole tables by name, then single seats ("Table A3", "Box SC seat 4") */
+export function describeSeats(seatIds: string[]): string[] {
+  const tables = new Set<string>()
+  const singles: string[] = []
+  for (const id of seatIds) {
+    const seat = seatsById.get(id)
+    if (seat?.tableId) tables.add(seat.tableId)
+    else singles.push(seat?.label ?? id)
+  }
+  return [...[...tables].map((t) => tablesById.get(t)?.label ?? t), ...singles]
+}

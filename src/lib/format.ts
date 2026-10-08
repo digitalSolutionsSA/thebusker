@@ -3,6 +3,9 @@ import type { Show } from '../types'
 export const formatPrice = (cents: number, currency = 'ZAR') =>
   new Intl.NumberFormat('en-ZA', { style: 'currency', currency }).format(cents / 100)
 
+/** Short booking code customers see after paying and can quote at the door (first 8 of the booking id) */
+export const bookingRef = (id: string) => id.replace(/-/g, '').slice(0, 8).toUpperCase()
+
 const toDate = (iso: string) => new Date(`${iso.slice(0, 10)}T00:00:00`)
 
 export const formatDay = (iso: string) => toDate(iso).toLocaleDateString('en-ZA', { day: '2-digit' })
