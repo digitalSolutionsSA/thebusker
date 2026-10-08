@@ -6,6 +6,7 @@ import { AdminMessage } from '../../../components/admin/AdminLayout'
 import { adminInput, adminLabel, btnGold } from '../../../components/admin/ui'
 import { ADMIN_BASE } from '../../../config/site'
 import Logo from '../../../components/ui/Logo'
+import AdminBackdrop from '../../../components/admin/AdminBackdrop'
 
 /** Where the "forgot password" and invite emails land: choose a new password. */
 export default function AdminSetPassword() {
@@ -33,7 +34,8 @@ export default function AdminSetPassword() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-night px-5 text-ivory">
+    <div className="relative isolate flex min-h-screen items-center justify-center px-5 text-ivory">
+      <AdminBackdrop />
       <form onSubmit={save} className="w-full max-w-sm">
         <Logo eager className="mx-auto w-40" />
         <p className="mt-5 text-center font-display text-2xl uppercase tracking-[0.12em] text-gold">Set your password</p>

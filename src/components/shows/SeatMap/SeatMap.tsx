@@ -50,6 +50,7 @@ function Seat({ spot, state }: { spot: SeatSpot; state: State }) {
 
 /** Hall plan: tap a table to book all its seats (or single seats at it), or a single seat along the walls and upstairs. */
 export default function SeatMap({ floor, taken, selected, onToggle, tableMode = 'whole' }: Props) {
+  const [, , viewW, viewH] = floor.viewBox.split(' ').map(Number)
   const interactive = (id: string, state: State, label: string) => ({
     role: 'button',
     tabIndex: state === 'taken' ? -1 : 0,
@@ -67,7 +68,14 @@ export default function SeatMap({ floor, taken, selected, onToggle, tableMode = 
   })
 
   return (
-    <svg viewBox={floor.viewBox} className="block h-auto w-full select-none" aria-label={`${floor.name} seating plan`}>
+    // Sized by screen height so the whole hall (stage to sound box) is always in view top to bottom;
+    // when that makes it wider than the screen, the parent scrolls sideways instead
+    <svg
+      viewBox={floor.viewBox}
+      className="mx-auto block h-[max(26rem,calc(100svh-12.5rem))] max-h-[62rem] w-auto max-w-none select-none"
+      style={{ aspectRatio: `${viewW} / ${viewH}` }}
+      aria-label={`${floor.name} seating plan`}
+    >
       {floor.id === 'downstairs' ? <DownstairsDecor /> : <UpstairsDecor />}
 
       {tableMode === 'seats' &&
@@ -194,13 +202,17 @@ function DownstairsDecor() {
 function UpstairsDecor() {
   return (
     <g aria-hidden className="pointer-events-none">
-      <rect x={180} y={40} width={420} height={50} rx={3} strokeDasharray="6 6" className="fill-gold/5 stroke-gold/40" strokeWidth={1.5} />
-      <text x={390} y={65} textAnchor="middle" dominantBaseline="central" className="fill-gold/80 text-[14px] font-bold tracking-[0.3em]">
+      {/* Same stage position and size as the downstairs plan */}
+      <rect x={70} y={85} width={620} height={75} rx={3} strokeDasharray="6 6" className="fill-gold/5 stroke-gold/40" strokeWidth={1.5} />
+      <text x={380} y={123} textAnchor="middle" dominantBaseline="central" className="fill-gold/80 text-[20px] font-bold tracking-[0.3em]">
         STAGE (BELOW)
       </text>
-      <path d="M85 90 V585 H695 V90 M135 90 V535 H645 V90" className={wall} strokeWidth={2} />
-      <text x={390} y={330} textAnchor="middle" className="fill-ivory/25 text-[13px] font-semibold uppercase tracking-[0.3em]">
+      <path d="M60 180 V935 H720 V180 M120 180 V875 H660 V180" className={wall} strokeWidth={2.5} />
+      <text x={390} y={520} textAnchor="middle" className="fill-ivory/25 text-[18px] font-semibold uppercase tracking-[0.3em]">
         Open to the hall
+      </text>
+      <text x={390} y={968} textAnchor="middle" className="fill-mist text-[11px] font-semibold uppercase tracking-[0.2em]">
+        Balcony back
       </text>
     </g>
   )

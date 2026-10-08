@@ -189,16 +189,18 @@ const downstairs: Floor = {
 }
 
 // ── Upstairs balcony (U shape around the hall, open towards the stage) ──────────
+// Drawn on the same canvas as downstairs (same viewBox, stage in the same place) so both floors
+// show at the same size and scale; the U runs along the hall's side walls and over the sound box.
 
 const upstairs: Floor = {
   id: 'upstairs',
   name: 'Upstairs',
-  viewBox: '40 20 700 600',
+  viewBox: downstairs.viewBox,
   tables: [],
   singles: [
-    ...singles('UL', 'Balcony left', line(16, 110, 110, 110, 500)),
-    ...singles('UR', 'Balcony right', line(16, 670, 110, 670, 500)),
-    ...singles('UB', 'Balcony back', line(16, 195, 560, 585, 560)),
+    ...singles('UL', 'Balcony left', line(16, 90, 210, 90, 850)),
+    ...singles('UR', 'Balcony right', line(16, 690, 210, 690, 850)),
+    ...singles('UB', 'Balcony back', line(16, 150, 905, 630, 905)),
   ],
 }
 

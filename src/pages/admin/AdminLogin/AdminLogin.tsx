@@ -5,6 +5,7 @@ import { useStaffSession } from '../../../hooks/useStaffSession'
 import { adminInput, adminLabel, btnGold } from '../../../components/admin/ui'
 import { ADMIN_BASE } from '../../../config/site'
 import Logo from '../../../components/ui/Logo'
+import AdminBackdrop from '../../../components/admin/AdminBackdrop'
 
 /** Staff sign-in for the admin portal, with a "forgot password" email link. */
 export default function AdminLogin() {
@@ -42,7 +43,8 @@ export default function AdminLogin() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-night px-5 text-ivory">
+    <div className="relative isolate flex min-h-screen items-center justify-center px-5 text-ivory">
+      <AdminBackdrop />
       <form onSubmit={signIn} className="w-full max-w-sm">
         <Logo eager className="mx-auto w-48" />
         <p className="mt-4 text-center text-[0.65rem] font-semibold uppercase tracking-[0.3em] text-gold">Admin portal</p>

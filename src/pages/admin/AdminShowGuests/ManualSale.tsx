@@ -107,7 +107,7 @@ export default function ManualSale({ show, onClose, onSaved }: { show: Show; onC
               ))}
             </div>
             <div className="-mx-1 overflow-x-auto">
-              <div className={floorId === 'downstairs' ? 'min-w-[620px] sm:min-w-0' : ''}>
+              <div className="w-max min-w-full">
                 <SeatMap floor={floor} taken={taken} selected={selected} onToggle={toggle} tableMode={show.table_mode ?? 'whole'} />
               </div>
             </div>

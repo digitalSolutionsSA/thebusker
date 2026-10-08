@@ -4,6 +4,7 @@ import { CalendarDays, Globe, LogOut, PlusCircle } from 'lucide-react'
 import { signOut, useStaffSession } from '../../../hooks/useStaffSession'
 import { ADMIN_BASE, site } from '../../../config/site'
 import Logo from '../../ui/Logo'
+import AdminBackdrop from '../AdminBackdrop'
 import { btnOutline } from '../ui'
 
 /** Frame for every signed-in portal page: access check, header and navigation. */
@@ -43,9 +44,10 @@ export default function AdminLayout() {
   const tab = 'flex flex-1 flex-col items-center gap-1 py-2.5 text-[0.62rem] font-semibold uppercase tracking-[0.14em]'
 
   return (
-    <div className="min-h-screen bg-night text-ivory">
+    <div className="relative isolate min-h-screen text-ivory">
+      <AdminBackdrop />
       {/* Fixed 4rem tall: pages with sticky toolbars sit just below it (top-16) */}
-      <header className="sticky top-0 z-30 border-b border-white/10 bg-night/95 backdrop-blur">
+      <header className="sticky top-0 z-30 border-b border-white/10 bg-night/80 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
           <div className="flex items-center gap-5">
             <Link to={ADMIN_BASE} className="flex items-center gap-3" aria-label="Busker admin home">
@@ -80,7 +82,7 @@ export default function AdminLayout() {
       </main>
 
       {/* Phones: thumb-reach tab bar instead of the header links */}
-      <nav className="fixed inset-x-0 bottom-0 z-30 flex border-t border-white/10 bg-night/95 pb-[env(safe-area-inset-bottom)] backdrop-blur sm:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-30 flex border-t border-white/10 bg-night/85 pb-[env(safe-area-inset-bottom)] backdrop-blur-md sm:hidden">
         <NavLink to={ADMIN_BASE} end className={({ isActive }) => `${tab} ${isActive ? 'text-gold' : 'text-mist'}`}>
           <CalendarDays size={18} /> Shows
         </NavLink>
@@ -97,7 +99,8 @@ export default function AdminLayout() {
 
 export function AdminMessage({ text, children }: { text: string; children?: ReactNode }) {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-night px-6 text-center text-ivory">
+    <div className="relative isolate flex min-h-screen flex-col items-center justify-center px-6 text-center text-ivory">
+      <AdminBackdrop />
       <Logo eager className="w-40" />
       <p className="mt-3 text-[0.62rem] font-semibold uppercase tracking-[0.25em] text-gold">Admin</p>
       <p className="mt-4 max-w-md text-sm text-mist">{text}</p>

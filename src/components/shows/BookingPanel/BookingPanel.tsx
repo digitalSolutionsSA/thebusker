@@ -107,7 +107,7 @@ export default function BookingPanel({ show }: { show: Show }) {
         </p>
 
         <div className="-mx-1 overflow-x-auto">
-          <div className={floorId === 'downstairs' ? 'min-w-[640px] sm:min-w-0' : ''}>
+          <div className="w-max min-w-full">
             <SeatMap floor={floor} taken={taken} selected={selected} onToggle={toggle} tableMode={tableMode} />
           </div>
         </div>

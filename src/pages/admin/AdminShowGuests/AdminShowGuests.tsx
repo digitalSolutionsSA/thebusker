@@ -161,7 +161,7 @@ export default function AdminShowGuests() {
       </div>
 
       {/* Search + filters stay in reach while scrolling the list at the door */}
-      <div className="sticky top-[65px] z-20 -mx-4 mt-6 border-b border-white/10 bg-night/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6">
+      <div className="sticky top-[65px] z-20 -mx-4 mt-6 border-b border-white/10 bg-night/85 px-4 py-3 backdrop-blur-md sm:-mx-6 sm:px-6">
         <div className="relative">
           <Search size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-mist" />
           <input
