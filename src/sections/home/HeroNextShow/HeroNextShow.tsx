@@ -9,40 +9,46 @@ import PosterDeck from '../../../components/shows/PosterDeck'
 import type { Show } from '../../../types'
 
 const MAX_SHOWS = 4
-/** How long each show's poster is shown sharp, then blurred with its countdown on top */
-const POSTER_MS = 3500
-const DETAILS_MS = 4500
+/** Each show: poster clear → blurred with its countdown on top → clear again → next show */
+const PHASES = [
+  { id: 'intro', ms: 1000 },
+  { id: 'details', ms: 2000 },
+  { id: 'outro', ms: 2500 },
+] as const
+const CYCLE_MS = PHASES.reduce((sum, p) => sum + p.ms, 0)
 
-type Phase = 'poster' | 'details'
+type Phase = (typeof PHASES)[number]['id']
 
 /**
  * "Up next" beside the hero headline: the next four shows as a fanned poster deck. Each front poster
- * shows on its own for a moment, then blurs while its countdown and booking button fade in over it,
- * then the next show is dealt to the front. Hovering or focusing holds the details on screen.
+ * shows clear for a second, blurs for two while its countdown and booking button sit over it, shows
+ * clear again, then the next show is dealt to the front. Hovering or focusing holds the details on screen.
  */
 export default function HeroNextShow() {
   const { shows } = useShows()
   const upcoming = shows.slice(0, MAX_SHOWS)
   const [active, setActive] = useState(0)
-  const [phase, setPhase] = useState<Phase>('poster')
-  const [held, setHeld] = useState(false)
+  const [phase, setPhase] = useState<Phase>('intro')
+  // Hovering holds the countdown on screen; so does keyboard focus. A mouse click leaves focus on the
+  // button it pressed, which must not keep the poster blurred once the pointer has moved away.
+  const [hovered, setHovered] = useState(false)
+  const [keyboardFocus, setKeyboardFocus] = useState(false)
+  const held = hovered || keyboardFocus
   const show = upcoming[active]
   const count = upcoming.length
   const still = prefersReducedMotion()
 
-  // poster → details → next show's poster → …
+  // intro (clear) → details (blurred) → outro (clear) → next show's intro → …
   useEffect(() => {
     if (held || still || count === 0) return
-    const t = window.setTimeout(
-      () => {
-        if (phase === 'poster') setPhase('details')
-        else {
-          setActive((i) => (i + 1) % count)
-          setPhase('poster')
-        }
-      },
-      phase === 'poster' ? POSTER_MS : DETAILS_MS,
-    )
+    const i = PHASES.findIndex((p) => p.id === phase)
+    const t = window.setTimeout(() => {
+      if (i < PHASES.length - 1) setPhase(PHASES[i + 1].id)
+      else {
+        setActive((a) => (a + 1) % count)
+        setPhase('intro')
+      }
+    }, PHASES[i].ms)
     return () => window.clearTimeout(t)
   }, [phase, active, held, still, count])
 
@@ -50,7 +56,7 @@ export default function HeroNextShow() {
 
   const select = (i: number) => {
     setActive(i)
-    setPhase('poster')
+    setPhase('intro')
   }
   const go = (step: number) => select((active + step + count) % count)
   const showDetails = held || still || phase === 'details'
@@ -58,10 +64,10 @@ export default function HeroNextShow() {
   return (
     <div
       className="relative flex flex-col items-center"
-      onPointerEnter={() => setHeld(true)}
-      onPointerLeave={() => setHeld(false)}
-      onFocus={() => setHeld(true)}
-      onBlur={() => setHeld(false)}
+      onPointerEnter={() => setHovered(true)}
+      onPointerLeave={() => setHovered(false)}
+      onFocus={(e) => setKeyboardFocus(e.target.matches(':focus-visible'))}
+      onBlur={() => setKeyboardFocus(false)}
     >
       {/* Warm stage glow behind the deck, so it sits in the scene rather than floating on it */}
       <div
@@ -106,7 +112,7 @@ export default function HeroNextShow() {
                   <span
                     key={`${active}-${held}`}
                     className="absolute inset-0 origin-left rounded-full bg-gold"
-                    style={held || still ? undefined : { animation: `deckprogress ${POSTER_MS + DETAILS_MS}ms linear forwards` }}
+                    style={held || still ? undefined : { animation: `deckprogress ${CYCLE_MS}ms linear forwards` }}
                   />
                 )}
               </button>
@@ -127,11 +133,11 @@ function PosterDetails({ show, visible, first }: { show: Show; visible: boolean;
   return (
     <div
       aria-hidden={!visible}
-      className={`absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-night/95 via-night/70 to-night/35 p-5 backdrop-blur-[6px] transition-opacity duration-700 ease-out ${
+      className={`absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-night/95 via-night/70 to-night/35 p-5 backdrop-blur-[6px] transition-opacity duration-500 ease-out ${
         visible ? 'pointer-events-auto opacity-100' : 'opacity-0'
       }`}
     >
-      <div className={`transition-transform duration-700 ease-out ${visible ? 'translate-y-0' : 'translate-y-4'}`}>
+      <div className={`transition-transform duration-500 ease-out ${visible ? 'translate-y-0' : 'translate-y-4'}`}>
         <p className="eyebrow text-[0.58rem] text-gold">{first ? 'Up next' : 'Coming up'}</p>
         <Link
           to={`/shows/${show.slug}`}

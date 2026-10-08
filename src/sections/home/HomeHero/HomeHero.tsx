@@ -134,25 +134,27 @@ export default function HomeHero() {
       <canvas data-hero-canvas ref={canvas} className="absolute inset-0 -z-20 h-full w-full" />
       <div className="absolute inset-0 -z-10 bg-gradient-to-t from-night via-transparent to-night/60" />
       <div className="absolute inset-0 -z-10 bg-night/35 lg:hidden" />
+      {/* Desktop: darken behind the headline so it stands off the photo */}
+      <div className="absolute inset-0 -z-10 hidden bg-gradient-to-r from-night/85 via-night/40 to-transparent lg:block" />
 
       {/* Big headline leads; the upcoming shows cycle beside it. A narrower frame than the page keeps
           the two together on wide screens instead of pinned to opposite edges. */}
       <div className="relative mx-auto grid w-full max-w-[84rem] items-center gap-14 px-5 pt-32 pb-36 sm:px-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-16 lg:px-14 lg:pt-28 lg:pb-28 xl:gap-24">
         <div data-hero-content>
-          <p data-hero-eyebrow className="eyebrow mb-7 flex items-center gap-5 text-gold">
+          <p data-hero-eyebrow className="eyebrow mb-7 flex items-center gap-5 text-[0.72rem] text-gold-light">
             Music Hall &amp; Venue · Vereeniging <span className="h-px w-12 bg-current opacity-70" />
           </p>
           <h1
-            className="leading-[0.95] text-[clamp(2.1rem,5vw,4.7rem)]"
+            className="leading-[0.95] text-[clamp(2.1rem,5.2vw,5rem)] [filter:drop-shadow(0_6px_28px_rgb(0_0_0/0.7))]"
             aria-label={current.lines.map((l) => l.text).join(' ')}
           >
             {current.lines.map((l, i) => (
               <span key={`${slide}-${i}`} data-hero-line aria-hidden className="mask-line">
-                <span className={l.weight === 'thin' ? 'type-thin text-ivory/90' : 'type-heavy text-gold-leaf'}>{l.text}</span>
+                <span className={l.weight === 'thin' ? 'type-thin text-ivory' : 'type-heavy text-gold-leaf'}>{l.text}</span>
               </span>
             ))}
           </h1>
-          <p data-hero-copy className="mt-7 max-w-md font-serif text-lg leading-relaxed text-ivory/80 sm:text-xl">
+          <p data-hero-copy className="mt-7 max-w-md font-serif text-lg leading-relaxed text-ivory/95 sm:text-xl [text-shadow:0_2px_16px_rgb(0_0_0/0.8)]">
             Good food, cold drinks and the best live acts in the Vaal — all under one roof at the Old Barnyard.
           </p>
           <div data-hero-cta className="mt-9 flex flex-wrap items-center gap-4">
