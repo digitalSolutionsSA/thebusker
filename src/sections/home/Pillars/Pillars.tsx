@@ -34,11 +34,11 @@ const PILLARS = [
   {
     no: '04',
     title: 'Bok Town',
-    text: 'Every Springbok match on the big screen, with the loudest crowd in V-Town.',
+    text: 'Every Springbok match on our 4m × 2m big screen, with the loudest crowd in V-Town.',
     icon: Tv,
-    image: images.venue.bigScreen,
+    image: images.bok.venueScreen,
     to: '/bok-town',
-    focus: [0.55, 0.5] as [number, number],
+    focus: [0.48, 0.45] as [number, number],
   },
 ]
 

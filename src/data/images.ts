@@ -35,6 +35,14 @@ export const images = {
     bandCrowd: '/images/venue/band-crowd.webp',
     bigScreen: '/images/venue/big-screen.webp',
   },
+  // Springbok match photos for the Bok Town pages
+  bok: {
+    trophy: '/images/bok/trophy-celebration.jpg',
+    kick: '/images/bok/conversion-kick.jpg',
+    anthem: '/images/bok/anthem.jpg',
+    // The Busker's own hall dressed for a Springbok test: big screen, green & gold lights
+    venueScreen: '/images/bok/venue-screen.jpg',
+  },
   shows: {
     guitarHands: '/images/shows/guitar-hands.webp',
     emptyStage: '/images/shows/empty-stage.webp',

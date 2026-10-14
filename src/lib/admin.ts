@@ -83,6 +83,9 @@ export interface ShowInput {
   price_upstairs_cents: number | null
   /** Tables sold whole, or seat by seat */
   table_mode: 'whole' | 'seats'
+  /** Tickets sold on another site (null = sold here). price_cents is then that site's price. */
+  external_ticket_url: string | null
+  external_ticket_seller: string | null
 }
 
 const slugify = (s: string) =>
@@ -98,7 +101,9 @@ const slugify = (s: string) =>
 export async function saveShow(input: ShowInput, id?: string): Promise<Show> {
   // Seat-map shows sell the whole venue, so their capacity is the number of seats in the plan
   let capacity = input.capacity
-  if (input.seating === 'reserved') {
+  if (input.external_ticket_url) {
+    // Sold elsewhere: keep the seat prices as they are, in case the show comes back to this site
+  } else if (input.seating === 'reserved') {
     // The website shows "from" the cheapest ticket type
     const tiers = [input.price_table_cents, input.price_single_cents, input.price_upstairs_cents].filter((p): p is number => p !== null)
     if (tiers.length) input = { ...input, price_cents: Math.min(...tiers) }

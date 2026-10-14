@@ -28,6 +28,8 @@ const blank: ShowInput = {
   price_single_cents: null,
   price_upstairs_cents: null,
   table_mode: 'whole',
+  external_ticket_url: null,
+  external_ticket_seller: null,
 }
 
 type Tier = 'table' | 'single' | 'upstairs'
@@ -48,6 +50,23 @@ const toCents = (rands: string) => {
   const n = Number(rands.replace(',', '.'))
   return rands.trim() !== '' && Number.isFinite(n) && n >= 0 ? Math.round(n * 100) : null
 }
+
+/** "quicket.co.za/events/123" → "https://quicket.co.za/events/123"; null when it isn't a web address */
+const externalUrl = (raw: string) => {
+  const trimmed = raw.trim()
+  if (!trimmed) return null
+  try {
+    const url = new URL(/^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`)
+    return url.hostname.includes('.') ? url.href : null
+  } catch {
+    return null
+  }
+}
+
+const salesOptions = [
+  { value: false, label: 'On this website', hint: 'Buyers pay here with Yoco and appear on your guest list.' },
+  { value: true, label: 'Another ticketing site', hint: 'Already on sale elsewhere (e.g. Quicket). The show page links there.' },
+]
 
 const seatingOptions = [
   { value: 'reserved' as const, label: 'Seating plan', hint: 'Buyers choose their seats or table on the venue map.' },
@@ -90,6 +109,8 @@ export default function AdminShowEdit() {
           price_single_cents: s.price_single_cents ?? null,
           price_upstairs_cents: s.price_upstairs_cents ?? null,
           table_mode: s.table_mode ?? 'whole',
+          external_ticket_url: s.external_ticket_url ?? null,
+          external_ticket_seller: s.external_ticket_seller ?? null,
         })
         setPrice((s.price_cents / 100).toFixed(2))
         setTierPrices({
@@ -109,6 +130,8 @@ export default function AdminShowEdit() {
   }, [id])
 
   const set = <K extends keyof ShowInput>(key: K, value: ShowInput[K]) => setForm((f) => ({ ...f, [key]: value }))
+  // '' while the link is still being typed; null = sold on this website
+  const external = form.external_ticket_url !== null
 
   const onPoster = async (file: File | undefined) => {
     if (!file) return
@@ -127,27 +150,39 @@ export default function AdminShowEdit() {
     e.preventDefault()
     const general = form.seating === 'general'
     const rands = Number(price.replace(',', '.'))
-    if (general && (!Number.isFinite(rands) || rands < 0 || price.trim() === '')) return setError('Enter the ticket price in rand, e.g. 150 or 150.00.')
-    const tierCents = { table: toCents(tierPrices.table), single: toCents(tierPrices.single), upstairs: toCents(tierPrices.upstairs) }
-    if (!general && Object.values(tierCents).some((c) => c === null)) return setError('Enter a price for each ticket type, e.g. 150 or 150.00.')
-    const limit = Math.floor(Number(tickets))
-    if (form.seating === 'general' && !(limit > 0)) return setError('Enter how many tickets are available.')
+    if ((general || external) && (!Number.isFinite(rands) || rands < 0 || price.trim() === ''))
+      return setError('Enter the ticket price in rand, e.g. 150 or 150.00.')
+
+    let sales: Partial<ShowInput>
+    if (external) {
+      const url = externalUrl(form.external_ticket_url ?? '')
+      if (!url) return setError('Enter the full link to the ticket page, e.g. https://www.quicket.co.za/events/…')
+      // Seat prices and seating are left as they were, in case the show comes back to this site
+      sales = {
+        price_cents: Math.round(rands * 100),
+        external_ticket_url: url,
+        external_ticket_seller: form.external_ticket_seller?.trim() || null,
+      }
+    } else {
+      const tierCents = { table: toCents(tierPrices.table), single: toCents(tierPrices.single), upstairs: toCents(tierPrices.upstairs) }
+      if (!general && Object.values(tierCents).some((c) => c === null)) return setError('Enter a price for each ticket type, e.g. 150 or 150.00.')
+      const limit = Math.floor(Number(tickets))
+      if (general && !(limit > 0)) return setError('Enter how many tickets are available.')
+      sales = {
+        price_cents: general ? Math.round(rands * 100) : Math.min(tierCents.table!, tierCents.single!, tierCents.upstairs!),
+        price_table_cents: tierCents.table,
+        price_single_cents: tierCents.single,
+        price_upstairs_cents: tierCents.upstairs,
+        capacity: general ? limit : form.capacity,
+        external_ticket_url: null,
+        external_ticket_seller: null,
+      }
+    }
+
     setBusy(true)
     setError(null)
     try {
-      await saveShow(
-        {
-          ...form,
-          title: form.title.trim(),
-          artist: form.artist.trim() || form.title.trim(),
-          price_cents: general ? Math.round(rands * 100) : Math.min(tierCents.table!, tierCents.single!, tierCents.upstairs!),
-          price_table_cents: tierCents.table,
-          price_single_cents: tierCents.single,
-          price_upstairs_cents: tierCents.upstairs,
-          capacity: general ? limit : form.capacity,
-        },
-        id,
-      )
+      await saveShow({ ...form, title: form.title.trim(), artist: form.artist.trim() || form.title.trim(), ...sales }, id)
       navigate(ADMIN_BASE)
     } catch (e) {
       setError((e as Error).message)
@@ -208,14 +243,14 @@ export default function AdminShowEdit() {
           <Field label="Artist / performers" htmlFor="artist">
             <input id="artist" value={form.artist} onChange={(e) => set('artist', e.target.value)} className={adminInput} placeholder="Defaults to the title" />
           </Field>
-          <div className={`grid gap-4 ${form.seating === 'general' ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
+          <div className={`grid gap-4 ${form.seating === 'general' || external ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
             <Field label="Date" htmlFor="date">
               <input id="date" type="date" required value={form.date} onChange={(e) => set('date', e.target.value)} className={adminInput} />
             </Field>
             <Field label="Doors / starts" htmlFor="doors">
               <input id="doors" type="time" required value={form.doors_time} onChange={(e) => set('doors_time', e.target.value)} className={adminInput} />
             </Field>
-            {form.seating === 'general' && (
+            {(form.seating === 'general' || external) && (
               <Field label="Price per ticket (R)" htmlFor="price">
                 <input id="price" inputMode="decimal" required value={price} onChange={(e) => setPrice(e.target.value)} className={adminInput} placeholder="150.00" />
               </Field>
@@ -231,18 +266,17 @@ export default function AdminShowEdit() {
             </select>
           </Field>
           <div>
-            <span className={adminLabel}>Tickets</span>
-            <div className="grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label="Tickets">
-              {seatingOptions.map((o) => (
+            <span className={adminLabel}>Where tickets are sold</span>
+            <div className="grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label="Where tickets are sold">
+              {salesOptions.map((o) => (
                 <button
-                  key={o.value}
+                  key={o.label}
                   type="button"
                   role="radio"
-                  aria-checked={form.seating === o.value}
-                  disabled={sold > 0 && form.seating !== o.value}
-                  onClick={() => set('seating', o.value)}
-                  className={`rounded-xl border p-3 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
-                    form.seating === o.value ? 'border-gold bg-gold/10' : 'border-white/15 hover:border-white/30'
+                  aria-checked={external === o.value}
+                  onClick={() => set('external_ticket_url', o.value ? (form.external_ticket_url ?? '') : null)}
+                  className={`rounded-xl border p-3 text-left transition-colors ${
+                    external === o.value ? 'border-gold bg-gold/10' : 'border-white/15 hover:border-white/30'
                   }`}
                 >
                   <span className="block text-sm font-semibold">{o.label}</span>
@@ -250,25 +284,76 @@ export default function AdminShowEdit() {
                 </button>
               ))}
             </div>
-            {sold > 0 && <p className="mt-2 text-xs text-mist">Tickets have been sold, so this can't be switched any more.</p>}
-            {form.seating === 'general' && (
-              <div className="mt-3 max-w-[14rem]">
-                <label htmlFor="tickets" className={adminLabel}>Tickets available</label>
-                <input
-                  id="tickets"
-                  inputMode="numeric"
-                  required
-                  value={tickets}
-                  onChange={(e) => setTickets(e.target.value.replace(/\D/g, ''))}
-                  className={adminInput}
-                  placeholder="e.g. 250"
-                />
-                {sold > 0 && <p className="mt-1 text-xs text-mist">{sold} already sold.</p>}
+            {external && (
+              <div className="mt-3 grid gap-4 sm:grid-cols-[1fr_12rem]">
+                <Field label="Link to buy tickets" htmlFor="external-url">
+                  <input
+                    id="external-url"
+                    type="text"
+                    inputMode="url"
+                    required
+                    value={form.external_ticket_url ?? ''}
+                    onChange={(e) => set('external_ticket_url', e.target.value)}
+                    className={adminInput}
+                    placeholder="https://www.quicket.co.za/events/…"
+                  />
+                </Field>
+                <Field label="Ticket site name" htmlFor="external-seller">
+                  <input
+                    id="external-seller"
+                    value={form.external_ticket_seller ?? ''}
+                    onChange={(e) => set('external_ticket_seller', e.target.value)}
+                    className={adminInput}
+                    placeholder="e.g. Quicket (optional)"
+                  />
+                </Field>
               </div>
             )}
+            {external && sold > 0 && (
+              <p className="mt-2 text-xs text-mist">{sold} tickets were already sold on this website. They stay valid and remain on the guest list.</p>
+            )}
           </div>
+          {!external && (
+            <div>
+              <span className={adminLabel}>Tickets</span>
+              <div className="grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label="Tickets">
+                {seatingOptions.map((o) => (
+                  <button
+                    key={o.value}
+                    type="button"
+                    role="radio"
+                    aria-checked={form.seating === o.value}
+                    disabled={sold > 0 && form.seating !== o.value}
+                    onClick={() => set('seating', o.value)}
+                    className={`rounded-xl border p-3 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                      form.seating === o.value ? 'border-gold bg-gold/10' : 'border-white/15 hover:border-white/30'
+                    }`}
+                  >
+                    <span className="block text-sm font-semibold">{o.label}</span>
+                    <span className="mt-0.5 block text-xs leading-relaxed text-mist">{o.hint}</span>
+                  </button>
+                ))}
+              </div>
+              {sold > 0 && <p className="mt-2 text-xs text-mist">Tickets have been sold, so this can't be switched any more.</p>}
+              {form.seating === 'general' && (
+                <div className="mt-3 max-w-[14rem]">
+                  <label htmlFor="tickets" className={adminLabel}>Tickets available</label>
+                  <input
+                    id="tickets"
+                    inputMode="numeric"
+                    required
+                    value={tickets}
+                    onChange={(e) => setTickets(e.target.value.replace(/\D/g, ''))}
+                    className={adminInput}
+                    placeholder="e.g. 250"
+                  />
+                  {sold > 0 && <p className="mt-1 text-xs text-mist">{sold} already sold.</p>}
+                </div>
+              )}
+            </div>
+          )}
 
-          {form.seating === 'reserved' && (
+          {!external && form.seating === 'reserved' && (
             <>
               <div>
                 <span className={adminLabel}>Ticket prices (R per seat)</span>
@@ -330,7 +415,9 @@ export default function AdminShowEdit() {
       </div>
 
       <p className="mt-4 text-xs text-mist">
-        {form.seating === 'general'
+        {external
+          ? 'Another ticketing site: no online booking here. The show page says tickets are sold elsewhere and links to the page above.'
+          : form.seating === 'general'
           ? 'General admission: no seat map on the website, and the show sells out at the number of tickets above.'
           : form.table_mode === 'whole'
             ? 'Seating plan: the whole venue is for sale. Tables are sold whole, at the table seat price for each seat.'

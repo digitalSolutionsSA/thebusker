@@ -21,7 +21,11 @@ export function useSectionReveal<T extends HTMLElement = HTMLElement>(deps: unkn
     () => {
       const root = ref.current
       if (!root || prefersReducedMotion()) return
-      const q = gsap.utils.selector(root)
+      // Only animate this section's own elements: a nested component with its own reveal (e.g. SectionHeading)
+      // handles its elements itself. Two `from` tweens on one element leave it stuck part-way hidden.
+      root.setAttribute('data-reveal-root', '')
+      const all = gsap.utils.selector(root)
+      const q = (selector: string) => all(selector).filter((el) => el.parentElement?.closest('[data-reveal-root]') === root)
 
       // Heading lines: group by their nearest heading so each heading triggers on its own
       const headings = new Set(q('.mask-line').map((l) => (l as HTMLElement).closest('h1,h2,h3,p,div') as HTMLElement))

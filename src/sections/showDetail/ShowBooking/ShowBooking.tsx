@@ -5,10 +5,12 @@ import { formatShortDate } from '../../../lib/format'
 import { useSectionReveal } from '../../../hooks/useSectionReveal'
 import BookingPanel from '../../../components/shows/BookingPanel'
 import TicketPanel from '../../../components/shows/TicketPanel'
+import ExternalTickets from '../../../components/shows/ExternalTickets'
 
 /** Booking first (seat plan or ticket count + order form), show details after, so buying takes as little scrolling as possible. */
 export default function ShowBooking({ show }: { show: Show }) {
   const root = useSectionReveal<HTMLElement>([show.id])
+  const external = Boolean(show.external_ticket_url)
   const general = show.seating === 'general'
 
   return (
@@ -24,10 +26,16 @@ export default function ShowBooking({ show }: { show: Show }) {
           {show.title} · {formatShortDate(show.date)} · from {show.doors_time}
         </p>
 
-        {/* Seat-map shows pick seats; general admission (e.g. club nights) just picks a ticket count */}
-        {general ? <TicketPanel key={show.id} show={show} /> : <BookingPanel key={show.id} show={show} />}
+        {/* Sold elsewhere links out; seat-map shows pick seats; general admission (e.g. club nights) just picks a ticket count */}
+        {external ? (
+          <ExternalTickets show={show} />
+        ) : general ? (
+          <TicketPanel key={show.id} show={show} />
+        ) : (
+          <BookingPanel key={show.id} show={show} />
+        )}
 
-        <div className={general ? 'mx-auto max-w-xl' : ''}>
+        <div className={general || external ? 'mx-auto max-w-xl' : ''}>
           {/* pre-line keeps the line breaks typed in the admin portal */}
           <p data-sr="up" className="mt-10 max-w-2xl whitespace-pre-line font-serif text-lg leading-relaxed text-ivory/80">
             {show.description}

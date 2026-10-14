@@ -7,7 +7,7 @@ import Button from '../../../components/ui/Button'
 import { images } from '../../../data/images'
 
 const highlights = [
-  { icon: Tv, label: 'Big screen viewing' },
+  { icon: Tv, label: '4m × 2m big screen' },
   { icon: Beer, label: 'Food & drink specials' },
   { icon: Users, label: 'Great atmosphere' },
   { icon: Shirt, label: 'Support the Springboks' },
@@ -17,20 +17,18 @@ export default function BokTownHero() {
   const root = useRef<HTMLElement>(null)
   const canvas = useRef<HTMLCanvasElement>(null)
 
-  // WebGL stadium scene with gold dust, cycling stadium ↔ big-screen crowd
+  // WebGL scene with gold dust, cycling through the Springbok photos
   useEffect(() => {
     if (!canvas.current) return
     const ready = registerAsset()
-    const scene = new HeroScene(
-      canvas.current,
-      [
-        { src: images.hero.stadium, focusX: 0.5 },
-        { src: images.venue.bigScreen, focusX: 0.4, dim: 0.9 },
-      ],
-      ready,
-    )
+    const slides = [
+      { src: images.bok.trophy, focusX: 0.5 },
+      { src: images.bok.kick, focusX: 0.35 },
+      { src: images.bok.anthem, focusX: 0.4 },
+    ]
+    const scene = new HeroScene(canvas.current, slides, ready)
     let i = 0
-    const timer = window.setInterval(() => scene.goTo((i = (i + 1) % 2)), 7000)
+    const timer = window.setInterval(() => scene.goTo((i = (i + 1) % slides.length)), 7000)
     introReady.then(() => scene.intro())
     return () => {
       window.clearInterval(timer)
@@ -58,9 +56,9 @@ export default function BokTownHero() {
   return (
     <section ref={root} className="relative isolate flex min-h-[100svh] flex-col justify-end overflow-hidden pt-28">
       <canvas data-bok-photo ref={canvas} className="absolute inset-0 -z-30 h-full w-full" />
-      {/* Deep green night grade over the stadium */}
-      <div className="absolute inset-0 -z-20 opacity-60 mix-blend-multiply bg-[radial-gradient(100%_80%_at_50%_20%,#2aa35c_0%,#0b3d24_45%,#04140b_85%)]" />
-      <div className="absolute inset-0 -z-10 bg-gradient-to-t from-night via-night/10 to-night/40" />
+      {/* Light green grade over the photos, darker at the edges so the gold title reads */}
+      <div className="absolute inset-0 -z-20 opacity-35 mix-blend-multiply bg-[radial-gradient(100%_80%_at_50%_20%,#2aa35c_0%,#0b3d24_45%,#04140b_85%)]" />
+      <div className="absolute inset-0 -z-10 bg-gradient-to-t from-night via-night/25 to-night/50" />
 
       <div data-bok-copy className="mx-auto w-full max-w-7xl px-5 text-center sm:px-8">
         <h1 className="relative inline-block font-brush text-[clamp(5rem,17vw,13rem)] leading-[0.8] -rotate-6">

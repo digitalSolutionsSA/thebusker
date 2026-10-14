@@ -41,6 +41,9 @@ Deno.serve(async (req) => {
     if (showError || !show || show.is_published === false) {
       return json({ error: 'Show not found.' }, 404)
     }
+    if (show.external_ticket_url) {
+      return json({ error: 'Tickets for this show are sold on another website. Please use the link on the show page.' }, 400)
+    }
 
     // Seat-map shows send seat ids; general-admission shows send a ticket count
     const general = show.seating === 'general'

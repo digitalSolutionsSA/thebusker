@@ -14,7 +14,7 @@ import Button from '../../../components/ui/Button'
 // Venue photos behind each kind of show (the poster itself is shown crisp in front)
 const backdrops: Record<Show['category'], string[]> = {
   'live-music': [images.hero.blueBand, images.hero.bandStage],
-  'bok-town': [images.hero.stadium, images.venue.bigScreen],
+  'bok-town': [images.bok.trophy, images.bok.kick, images.bok.anthem],
   special: [images.hero.warmCrowd, images.hero.handsUp],
 }
 

@@ -14,18 +14,18 @@ export default function BokTown() {
       <FixturesSection />
       <Spotlight
         tone="bok"
-        image={images.hero.stadium}
+        image={images.bok.anthem}
         heavy="Go"
         thin="Bokke!"
         eyebrow="Match day at The Busker"
-        copy="Every Springbok test live on the big screen — anthem, kick-off and the final whistle, with V-Town in full voice."
+        copy="Every Springbok test live on our 4m × 2m screen — anthem, kick-off and the final whistle, with V-Town in full voice."
       />
       <WatchTogether />
       <MatchDayPerks />
       <ZoomReveal
         tone="bok"
-        image={images.venue.bigScreen}
-        alt="Fans watching the match on a big screen"
+        image={images.bok.trophy}
+        alt="The Springboks lifting the Rugby World Cup"
         left="Green"
         right="& gold."
         caption="Book a table early — match days fill up fast."

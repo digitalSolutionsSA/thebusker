@@ -13,7 +13,7 @@ export default function WatchTogether() {
     <section ref={root} className="relative isolate overflow-hidden">
       <div className="absolute inset-0 -z-20 overflow-hidden">
         <div data-parallax="10" className="absolute -inset-y-[12%] inset-x-0">
-          <Photo src={images.venue.bigScreen} alt="" className="absolute inset-0" />
+          <Photo src={images.bok.venueScreen} alt="" className="absolute inset-0" />
         </div>
       </div>
       <div className="absolute inset-0 -z-10 bg-gradient-to-r from-night via-night/85 to-night/40" />
@@ -33,7 +33,7 @@ export default function WatchTogether() {
           </h2>
           <span data-rule className="gold-rule mt-6 max-w-xs" />
           <p data-sr="up" className="mt-6 max-w-md font-serif text-xl leading-relaxed text-ivory/85">
-            Massive screens. Ice-cold drinks. True South African spirit.
+            A 4m × 2m screen. Ice-cold drinks. True South African spirit.
           </p>
           <div data-sr="up" data-sr-delay="150" className="mt-8 flex flex-wrap gap-4">
             <Button href="#fixtures" magnetic>

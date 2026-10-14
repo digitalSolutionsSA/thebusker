@@ -40,3 +40,14 @@ They are placeholders for the look and feel; replace them with photos of The Bus
 | venue/guitar-wall.webp | photo-1785665358878-d0c9daea8819 |
 | venue/brick-lounge.webp | photo-1766230887392-49e14a26702b |
 | venue/beer-flight.webp | photo-1643005499783-e1548452f68a |
+
+## Bok Town match photos
+
+Supplied by The Busker (not Unsplash). Used in the Bok Town hero, the "Go Bokke!" section and Bok Town show pages.
+
+| File | Shows |
+| --- | --- |
+| bok/trophy-celebration.jpg | Springboks lifting the Rugby World Cup |
+| bok/conversion-kick.jpg | Springbok kicker taking a conversion |
+| bok/anthem.jpg | Springboks singing the anthem |
+| bok/venue-screen.jpg | The Busker hall dressed for a Springbok test (big screen, green & gold lights) |

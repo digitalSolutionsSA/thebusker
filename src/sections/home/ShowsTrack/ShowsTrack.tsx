@@ -43,7 +43,8 @@ export default function ShowsTrack({ excludeSlug, thin = "What's", heavy = 'On S
         })
         tl.to(el, { x: () => -distance(), ease: 'none' }, 0).fromTo('[data-track-progress]', { scaleX: 0 }, { scaleX: 1, ease: 'none' }, 0)
 
-        // each card tilts in as it enters the frame
+        // each card tilts in as it enters the frame and is straight once fully on screen (with only a few
+        // shows the track barely moves, so a card may never reach the centre)
         gsap.utils.toArray<HTMLElement>('[data-track-card]').forEach((card) => {
           gsap.fromTo(
             card.querySelector('[data-track-poster]'),
@@ -52,7 +53,7 @@ export default function ShowsTrack({ excludeSlug, thin = "What's", heavy = 'On S
               rotate: 0,
               scale: 1,
               ease: 'none',
-              scrollTrigger: { trigger: card, containerAnimation: tl, start: 'left right', end: 'center center', scrub: true },
+              scrollTrigger: { trigger: card, containerAnimation: tl, start: 'left right', end: 'right right', scrub: true },
             },
           )
         })

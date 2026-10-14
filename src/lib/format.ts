@@ -4,7 +4,7 @@ import { seatCategory, type SeatCategory } from '../data/venueLayout'
 export const formatPrice = (cents: number, currency = 'ZAR') =>
   new Intl.NumberFormat('en-ZA', { style: 'currency', currency }).format(cents / 100)
 
-type PricedShow = Pick<Show, 'price_cents' | 'seating' | 'price_table_cents' | 'price_single_cents' | 'price_upstairs_cents'>
+type PricedShow = Pick<Show, 'price_cents' | 'seating' | 'price_table_cents' | 'price_single_cents' | 'price_upstairs_cents' | 'external_ticket_url'>
 
 /** Price of one seat of a ticket type (seating-plan shows); unset types use the show's main price */
 export function categoryPrice(show: PricedShow, category: SeatCategory): number {
@@ -18,7 +18,8 @@ export const seatsTotal = (show: PricedShow, seatIds: string[]) =>
 
 /** "R 150,00" — or "From R 120,00" when a seating-plan show has different ticket prices */
 export function priceLabel(show: PricedShow & { currency: string }): string {
-  if (show.seating === 'general') return formatPrice(show.price_cents, show.currency)
+  // Shows sold on another site have a single price, entered in the admin portal
+  if (show.seating === 'general' || show.external_ticket_url) return formatPrice(show.price_cents, show.currency)
   const prices = (['table', 'single', 'upstairs'] as const).map((c) => categoryPrice(show, c))
   const min = Math.min(...prices)
   return `${min === Math.max(...prices) ? '' : 'From '}${formatPrice(min, show.currency)}`
@@ -47,7 +48,9 @@ export const formatShortDate = (iso: string) =>
 export const showStart = (show: Pick<Show, 'date' | 'doors_time'>) =>
   new Date(`${show.date.slice(0, 10)}T${(show.doors_time || '19:00').padStart(5, '0')}:00+02:00`)
 
-export const ticketsRemaining = (show: Show) => Math.max(0, show.capacity - show.tickets_sold)
+/** Shows sold on another site never read as sold out here: their sales aren't visible to us */
+export const ticketsRemaining = (show: Show) =>
+  show.external_ticket_url ? Number.POSITIVE_INFINITY : Math.max(0, show.capacity - show.tickets_sold)
 
 export const isSellingFast = (show: Show) => {
   const left = ticketsRemaining(show)

@@ -75,10 +75,13 @@ function ShowRow({ show, tonight = false }: { show: Show; tonight?: boolean }) {
           <div className="flex flex-wrap items-center gap-2">
             {tonight && <span className={`${badge} bg-gold text-night`}>Tonight</span>}
             {show.is_published === false && <span className={`${badge} bg-white/10 text-mist`}>Hidden</span>}
+            {show.external_ticket_url && (
+              <span className={`${badge} bg-white/10 text-mist`}>Sold on {show.external_ticket_seller || 'another site'}</span>
+            )}
           </div>
           <p className="mt-1 truncate font-display text-lg uppercase leading-tight text-ivory">{show.title}</p>
           <p className="text-xs text-mist">
-            {formatLongDate(show.date)} · {show.doors_time} · {priceLabel(show)} {show.seating === 'general' ? 'per ticket' : 'per seat'}
+            {formatLongDate(show.date)} · {show.doors_time} · {priceLabel(show)} {show.seating === 'general' || show.external_ticket_url ? 'per ticket' : 'per seat'}
           </p>
           <div className="mt-2 flex items-center gap-3">
             <div className="h-1.5 w-32 overflow-hidden rounded-full bg-white/10">
