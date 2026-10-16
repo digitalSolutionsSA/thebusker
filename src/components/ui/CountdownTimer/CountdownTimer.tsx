@@ -31,11 +31,11 @@ export default function CountdownTimer({ target, tone = 'ember', fallback = 'Itâ
   return (
     <div className={`grid grid-cols-4 gap-2 sm:gap-3 ${className}`} role="timer" aria-live="off">
       {units.map((u) => (
-        <div key={u.label} className={`rounded-xl border px-2 text-center ${compact ? 'py-2.5' : 'py-3 sm:py-4'} ${t.box}`}>
+        <div key={u.label} className={`min-w-0 rounded-xl border px-1 text-center sm:px-2 ${compact ? 'py-2.5' : 'py-3 sm:py-4'} ${t.box}`}>
           <div className={`font-display tabular-nums leading-none ${compact ? 'text-2xl' : 'text-2xl sm:text-4xl'} ${t.value}`}>
             {String(u.value).padStart(2, '0')}
           </div>
-          <div className={`mt-2 text-[0.6rem] uppercase tracking-[0.3em] ${t.label}`}>{u.label}</div>
+          <div className={`mt-2 text-[0.6rem] uppercase tracking-[0.12em] sm:tracking-[0.3em] ${t.label}`}>{u.label}</div>
         </div>
       ))}
     </div>

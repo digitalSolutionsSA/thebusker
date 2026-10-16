@@ -79,7 +79,13 @@ export interface GLImageOptions {
   tint?: [number, number, number]
 }
 
-/** A WebGL photo with hover ripple, pointer light, scroll parallax and a wipe-in reveal. */
+/** Same cap as the hero: past 1.5x the shader costs far more GPU time without a visible gain */
+const pixelRatio = () => Math.min(window.devicePixelRatio || 1, 1.5)
+
+/**
+ * A WebGL photo with hover ripple, pointer light, scroll parallax and a wipe-in reveal.
+ * Frames are only drawn while something changes (hover, reveal, scroll), so idle photos cost nothing.
+ */
 export class GLImage {
   private renderer: THREE.WebGLRenderer
   private scene = new THREE.Scene()
@@ -93,11 +99,14 @@ export class GLImage {
   private mouse = new THREE.Vector2(0.5, 0.5)
   private texture?: THREE.Texture
   private host: HTMLElement
+  private lastScroll = Number.NaN
+  private onReady?: () => void
 
-  constructor(canvas: HTMLCanvasElement, host: HTMLElement, src: string, opts: GLImageOptions = {}) {
+  constructor(canvas: HTMLCanvasElement, host: HTMLElement, src: string, opts: GLImageOptions = {}, onReady?: () => void) {
     this.host = host
+    this.onReady = onReady
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: false })
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75))
+    this.renderer.setPixelRatio(pixelRatio())
     this.renderer.setClearColor(0x0f0b07)
     this.mat = new THREE.ShaderMaterial({
       vertexShader: vertex,
@@ -126,12 +135,17 @@ export class GLImage {
       this.mat.uniforms.uRes.value.set(img.width, img.height)
       this.mat.uniforms.uTex.value = tex
       this.texture = tex
+      // Already on screen (the plain photo underneath is showing): skip the wipe and just swap in
+      const r = host.getBoundingClientRect()
+      if (r.top < window.innerHeight && r.bottom > 0) this.mat.uniforms.uReveal.value = 1
+      this.render()
+      this.onReady?.()
     })
 
     this.io = new IntersectionObserver(
       ([e]) => {
         this.visible = e.isIntersecting
-        if (e.isIntersecting && this.mat.uniforms.uReveal.value === 0) {
+        if (e.isIntersecting && this.texture && this.mat.uniforms.uReveal.value === 0) {
           gsap.to(this.mat.uniforms.uReveal, { value: 1, duration: 2.4, ease: 'expo.out', delay: 0.15 })
         }
       },
@@ -165,18 +179,28 @@ export class GLImage {
     view.set(w, h)
     // Resizing wipes the canvas, and ResizeObserver fires after this frame's render — draw again
     // now or the photo flashes black on every frame of a size change (e.g. the pillars widening on hover)
-    if (this.texture) this.renderer.render(this.scene, this.camera)
+    if (this.texture) this.render()
+  }
+
+  private render() {
+    this.renderer.render(this.scene, this.camera)
   }
 
   private tick = () => {
     this.raf = requestAnimationFrame(this.tick)
     if (!this.visible || !this.texture) return
     const u = this.mat.uniforms
+    const r = this.host.getBoundingClientRect()
+    const scroll = (r.top + r.height / 2) / window.innerHeight - 0.5
+    const hovering = u.uHover.value > 0.001
+    const revealing = u.uReveal.value > 0 && u.uReveal.value < 1
+    // Idle (not hovered, not revealing, not scrolling): the last frame stays on the canvas
+    if (!hovering && !revealing && scroll === this.lastScroll) return
+    this.lastScroll = scroll
+    u.uScroll.value = scroll
     u.uTime.value = this.clock.getElapsedTime()
     ;(u.uMouse.value as THREE.Vector2).lerp(this.mouse, 0.08)
-    const r = this.host.getBoundingClientRect()
-    u.uScroll.value = (r.top + r.height / 2) / window.innerHeight - 0.5
-    this.renderer.render(this.scene, this.camera)
+    this.render()
   }
 
   dispose() {

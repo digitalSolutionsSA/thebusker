@@ -52,7 +52,7 @@ export default function Photo({ src, alt, className = '', imgClassName = '', pri
           if (img?.complete) setLoaded(true)
         }}
         style={bleed}
-        className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ${loaded ? 'opacity-100' : 'opacity-0'} ${imgClassName}`}
+        className={`absolute inset-0 h-full w-full object-cover transition-opacity ${priority ? 'duration-300' : 'duration-700'} ${loaded ? 'opacity-100' : 'opacity-0'} ${imgClassName}`}
       />
     </div>
   )

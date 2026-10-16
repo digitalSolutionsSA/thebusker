@@ -44,11 +44,11 @@ export default function Occasions() {
             <div key={title} data-occasion data-sr="up" data-sr-delay={i * 150}>
               <GLPhoto src={image} alt={title} cursor="Ripple" className="group h-[30rem] rounded-3xl border border-gold/20">
                 <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-night via-night/40 to-transparent" />
-                <div className="pointer-events-none absolute inset-x-0 bottom-0 p-8">
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 p-7 md:p-6 lg:p-8">
                   <div className="mb-5 grid h-12 w-12 place-items-center rounded-full border border-gold/50 bg-night/50 text-gold backdrop-blur">
                     <Icon size={20} strokeWidth={1.5} />
                   </div>
-                  <h3 className="type-heavy text-gold-leaf text-2xl">{title}</h3>
+                  <h3 className="type-heavy text-gold-leaf text-2xl break-words md:text-lg lg:text-2xl">{title}</h3>
                   <p className="mt-3 max-w-xs text-sm leading-relaxed text-ivory/75">{body}</p>
                 </div>
               </GLPhoto>

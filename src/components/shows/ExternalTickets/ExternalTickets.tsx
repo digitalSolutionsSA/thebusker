@@ -10,10 +10,10 @@ export default function ExternalTickets({ show }: { show: Show }) {
 
   return (
     <div className="glass mx-auto max-w-xl rounded-3xl p-5 text-center shadow-[0_40px_120px_-40px_rgb(201_162_74/0.5)] sm:p-7">
-      <p className="flex items-center justify-center gap-2 text-[0.7rem] font-semibold uppercase tracking-[0.25em] text-gold">
-        <Info size={14} /> Booked through {seller || 'an external ticket site'}
+      <p className="flex items-center justify-center gap-2 text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-balance text-gold sm:tracking-[0.25em]">
+        <Info size={14} className="shrink-0" /> Booked through {seller || 'an external ticket site'}
       </p>
-      <p className="mt-4 font-serif text-lg leading-relaxed text-ivory/85">
+      <p className="mt-4 font-serif text-base leading-relaxed sm:text-lg text-ivory/85">
         Tickets for this show are sold through {seller || 'an external ticketing site'}, not on our website. Please click below to
         buy your tickets.
       </p>

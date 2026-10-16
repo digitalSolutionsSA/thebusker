@@ -144,7 +144,33 @@ export async function deleteShow(id: string) {
   fail(error)
 }
 
-export async function uploadPoster(file: File): Promise<string> {
+/** Widest a poster is ever shown (show page on a retina screen); anything bigger is wasted download */
+const POSTER_MAX_WIDTH = 1200
+
+/**
+ * Shrinks a poster in the browser to WebP before upload, so a 20 MB design export becomes ~100 kB
+ * for every visitor. Falls back to the original file if the browser can't decode or encode it.
+ */
+async function optimisePoster(file: File): Promise<File> {
+  if (!file.type.startsWith('image/') || file.type === 'image/gif' || file.type === 'image/svg+xml') return file
+  try {
+    const bitmap = await createImageBitmap(file)
+    const scale = Math.min(1, POSTER_MAX_WIDTH / bitmap.width)
+    const canvas = document.createElement('canvas')
+    canvas.width = Math.round(bitmap.width * scale)
+    canvas.height = Math.round(bitmap.height * scale)
+    canvas.getContext('2d')!.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
+    bitmap.close()
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/webp', 0.8))
+    if (!blob || blob.type !== 'image/webp' || blob.size >= file.size) return file
+    return new File([blob], file.name.replace(/\.[^.]+$/, '') + '.webp', { type: 'image/webp' })
+  } catch {
+    return file
+  }
+}
+
+export async function uploadPoster(original: File): Promise<string> {
+  const file = await optimisePoster(original)
   const ext = (file.name.split('.').pop() || 'jpg').toLowerCase()
   const path = `${crypto.randomUUID()}.${ext}`
   const { error } = await db().storage.from('posters').upload(path, file, { contentType: file.type, cacheControl: '31536000' })

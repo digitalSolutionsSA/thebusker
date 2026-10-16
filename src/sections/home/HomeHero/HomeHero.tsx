@@ -3,7 +3,7 @@ import { ArrowRight } from 'lucide-react'
 import { gsap, prefersReducedMotion } from '../../../lib/gsap'
 import { introReady, registerAsset } from '../../../lib/intro'
 import { HERO_SLIDES } from '../../../data/heroSlides'
-import { HeroScene } from '../../../components/three/HeroScene'
+import { createHeroScene, type HeroSceneHandle } from '../../../components/three/HeroScene'
 import Button from '../../../components/ui/Button'
 import HeroNextShow from '../HeroNextShow'
 
@@ -16,7 +16,7 @@ const AUTOPLAY = 8 // seconds per slide
 export default function HomeHero() {
   const root = useRef<HTMLElement>(null)
   const canvas = useRef<HTMLCanvasElement>(null)
-  const scene = useRef<HeroScene | null>(null)
+  const scene = useRef<HeroSceneHandle | null>(null)
   const [slide, setSlide] = useState(0)
   const busy = useRef(false)
   const first = useRef(true)
@@ -24,7 +24,7 @@ export default function HomeHero() {
 
   useEffect(() => {
     const ready = registerAsset()
-    scene.current = new HeroScene(
+    scene.current = createHeroScene(
       canvas.current!,
       HERO_SLIDES.map((s) => ({ src: s.image, focusX: s.focusX, dim: s.dim })),
       ready,

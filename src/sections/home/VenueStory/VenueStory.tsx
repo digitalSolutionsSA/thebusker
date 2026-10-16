@@ -23,7 +23,7 @@ export default function VenueStory() {
       <div className="relative mx-auto grid max-w-7xl items-center gap-14 px-5 sm:px-8 lg:grid-cols-[1fr_1.1fr] lg:gap-20">
         <div>
           {/* Padding on the inner spans keeps the script swashes inside the gold text clip and the reveal mask */}
-          <h2 className="font-script text-gold-leaf -ml-[0.35em] text-[clamp(3.4rem,7vw,6rem)] leading-[1.05] tracking-[0.01em] [word-spacing:0.12em] whitespace-nowrap -rotate-3 [&_.mask-line>span]:px-[0.35em] origin-left">
+          <h2 className="font-script text-gold-leaf -ml-[0.35em] text-[clamp(2.5rem,11vw,6rem)] lg:text-[clamp(3.4rem,7vw,6rem)] leading-[1.05] tracking-[0.01em] [word-spacing:0.12em] whitespace-nowrap -rotate-3 [&_.mask-line>span]:px-[0.35em] origin-left">
             <span className="mask-line pb-3">
               <span>More Than</span>
             </span>

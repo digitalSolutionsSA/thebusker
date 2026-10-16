@@ -6,7 +6,7 @@ import { formatLongDate, showStart, ticketsRemaining, priceLabel } from '../../.
 import { gsap, prefersReducedMotion } from '../../../lib/gsap'
 import { introReady, registerAsset } from '../../../lib/intro'
 import { images } from '../../../data/images'
-import { HeroScene } from '../../../components/three/HeroScene'
+import { createHeroScene } from '../../../components/three/HeroScene'
 import ShowPoster from '../../../components/shows/ShowPoster'
 import CountdownTimer from '../../../components/ui/CountdownTimer'
 import Button from '../../../components/ui/Button'
@@ -40,7 +40,7 @@ export default function ShowHero({ show }: { show: Show }) {
     if (!canvas.current) return
     const ready = registerAsset()
     const list = backdrops[show.category]
-    const scene = new HeroScene(
+    const scene = createHeroScene(
       canvas.current,
       list.map((src) => ({ src, focusX: 0.5, dim: 0.85 })),
       ready,
@@ -174,7 +174,7 @@ export default function ShowHero({ show }: { show: Show }) {
               src={show.image_url}
               alt=""
               aria-hidden
-              className="absolute inset-0 -z-10 h-full w-full scale-110 rounded-2xl object-cover opacity-60 blur-3xl"
+              className="absolute inset-0 -z-10 hidden h-full w-full scale-110 rounded-2xl object-cover opacity-60 blur-3xl md:block"
             />
           )}
           <div data-show-card ref={card} className="relative [transform-style:preserve-3d]" data-cursor="Book">

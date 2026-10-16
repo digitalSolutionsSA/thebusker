@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { ArrowRight, Beer, Shirt, Tv, Users } from 'lucide-react'
 import { gsap, useGSAP, prefersReducedMotion } from '../../../lib/gsap'
 import { introReady, registerAsset } from '../../../lib/intro'
-import { HeroScene } from '../../../components/three/HeroScene'
+import { createHeroScene } from '../../../components/three/HeroScene'
 import Button from '../../../components/ui/Button'
 import { images } from '../../../data/images'
 
@@ -26,7 +26,7 @@ export default function BokTownHero() {
       { src: images.bok.kick, focusX: 0.35 },
       { src: images.bok.anthem, focusX: 0.4 },
     ]
-    const scene = new HeroScene(canvas.current, slides, ready)
+    const scene = createHeroScene(canvas.current, slides, ready)
     let i = 0
     const timer = window.setInterval(() => scene.goTo((i = (i + 1) % slides.length)), 7000)
     introReady.then(() => scene.intro())
@@ -73,7 +73,7 @@ export default function BokTownHero() {
             </span>
           </span>
         </h1>
-        <p data-bok-fade className="mt-6 text-sm font-semibold uppercase tracking-[0.4em] text-ivory sm:text-base">
+        <p data-bok-fade className="mt-6 text-sm font-semibold uppercase tracking-[0.22em] text-balance text-ivory sm:text-base sm:tracking-[0.4em]">
           Big games. Cold drinks. Great company.
         </p>
         <div data-bok-fade className="mt-8 flex flex-wrap justify-center gap-4">
@@ -91,7 +91,7 @@ export default function BokTownHero() {
           <li
             key={label}
             data-bok-highlight
-            className="flex flex-col items-center gap-3 border-gold/15 px-4 py-7 text-center text-[0.62rem] font-semibold uppercase leading-snug tracking-[0.22em] text-ivory/85 [&:not(:last-child)]:border-r"
+            className="flex flex-col items-center gap-3 border-gold/15 px-4 py-7 text-center text-[0.62rem] font-semibold uppercase leading-snug tracking-[0.14em] text-ivory/85 sm:tracking-[0.22em] [&:not(:last-child)]:border-r"
           >
             <Icon size={32} strokeWidth={1.1} className="text-gold" />
             {label}

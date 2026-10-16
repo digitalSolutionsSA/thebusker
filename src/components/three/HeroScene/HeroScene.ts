@@ -141,6 +141,12 @@ const dustFragment = /* glsl */ `
 
 /** Zoom a slide settles at; each new slide eases in from slightly closer */
 const REST_ZOOM = 1.04
+
+/**
+ * Full-screen shader cost grows with pixel count: render at up to 1.5x on desktop and 1x on phones.
+ * The photo is soft-graded with grain on top, so the difference isn't visible but the GPU load halves.
+ */
+const pixelRatio = () => Math.min(window.devicePixelRatio || 1, window.innerWidth < 768 ? 1 : 1.5)
 const ENTER_ZOOM = 1.14
 
 export interface HeroSlideImage {
@@ -167,13 +173,17 @@ export class HeroScene {
   private observer: IntersectionObserver
   private images: HeroSlideImage[]
   private canvas: HTMLCanvasElement
+  private disposed = false
 
   constructor(canvas: HTMLCanvasElement, images: HeroSlideImage[], onReady?: () => void) {
     this.canvas = canvas
     this.images = images
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false, powerPreference: 'high-performance' })
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+    this.renderer.setPixelRatio(pixelRatio())
     this.renderer.setClearColor(0x0f0b07)
+    // Fades in once the first photo is on the GPU, instead of popping in over a black frame
+    canvas.style.opacity = '0'
+    canvas.style.transition = 'opacity 0.8s ease-out'
 
     this.material = new THREE.ShaderMaterial({
       vertexShader: vertex,
@@ -204,7 +214,7 @@ export class HeroScene {
     const pos = new Float32Array(count * 3)
     const size = new Float32Array(count)
     const seed = new Float32Array(count)
-    const dpr = Math.min(window.devicePixelRatio, 2)
+    const dpr = pixelRatio()
     for (let i = 0; i < count; i++) {
       pos[i * 3] = Math.random() * 2 - 1
       pos[i * 3 + 1] = Math.random() * 2 - 1
@@ -225,10 +235,12 @@ export class HeroScene {
     })
     this.scene.add(new THREE.Points(geo, this.dust))
 
+    // The first photo loads alone and releases the preloader; the others follow once it's up,
+    // so they don't compete with it (and the rest of the page) for bandwidth
     const loader = new THREE.TextureLoader()
-    let loaded = 0
-    images.forEach((img, i) => {
-      loader.load(img.src, (tex) => {
+    const load = (i: number) =>
+      loader.load(images[i].src, (tex) => {
+        if (this.disposed) return tex.dispose()
         tex.colorSpace = THREE.SRGBColorSpace
         tex.minFilter = THREE.LinearFilter
         tex.generateMipmaps = false
@@ -241,11 +253,15 @@ export class HeroScene {
           u.uTex2.value = tex
           u.uRes1.value = this.sizes[0]
           u.uRes2.value = this.sizes[0]
+          this.renderer.render(this.scene, this.camera)
+          canvas.style.opacity = '1'
+          onReady?.()
+          for (let k = 1; k < images.length; k++) load(k)
         }
-        loaded++
-        if (loaded === images.length) onReady?.()
+      }, undefined, () => {
+        if (i === 0) onReady?.()
       })
-    })
+    load(0)
 
     this.resize()
     window.addEventListener('resize', this.resize)
@@ -305,7 +321,7 @@ export class HeroScene {
 
   private tick = () => {
     this.raf = requestAnimationFrame(this.tick)
-    if (!this.visible) return
+    if (!this.visible || !this.textures[0]) return
     const t = this.clock.getElapsedTime()
     const u = this.material.uniforms
     u.uTime.value = t
@@ -316,6 +332,7 @@ export class HeroScene {
   }
 
   dispose() {
+    this.disposed = true
     cancelAnimationFrame(this.raf)
     window.removeEventListener('resize', this.resize)
     window.removeEventListener('pointermove', this.onPointer)

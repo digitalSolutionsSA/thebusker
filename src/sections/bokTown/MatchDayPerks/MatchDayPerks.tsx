@@ -42,9 +42,9 @@ export default function MatchDayPerks() {
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <div className="text-center">
           <p data-sr="fade" className="eyebrow flex items-center justify-center gap-4 text-bok-gold">
-            <span className="h-px w-10 bg-current opacity-60" />
+            <span className="h-px w-6 shrink-0 bg-current opacity-60 sm:w-10" />
             Match day at The Busker
-            <span className="h-px w-10 bg-current opacity-60" />
+            <span className="h-px w-6 shrink-0 bg-current opacity-60 sm:w-10" />
           </p>
           <h2 className="mt-6 font-brush text-[clamp(2.8rem,7vw,5.5rem)] leading-[1.05] -rotate-2">
             <span className="mask-line px-[0.2em] pb-2">

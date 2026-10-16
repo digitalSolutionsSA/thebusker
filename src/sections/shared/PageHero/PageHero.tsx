@@ -1,7 +1,7 @@
 import { useEffect, useRef, type ReactNode } from 'react'
 import { gsap, prefersReducedMotion } from '../../../lib/gsap'
 import { introReady, registerAsset } from '../../../lib/intro'
-import { HeroScene } from '../../../components/three/HeroScene'
+import { createHeroScene } from '../../../components/three/HeroScene'
 
 interface Props {
   eyebrow: string
@@ -53,7 +53,7 @@ export default function PageHero({
   useEffect(() => {
     if (!canvas.current) return
     const ready = registerAsset()
-    const scene = new HeroScene(
+    const scene = createHeroScene(
       canvas.current,
       images.map((src) => ({ src, focusX, dim })),
       ready,

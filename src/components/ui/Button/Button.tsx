@@ -34,8 +34,8 @@ const variants: Record<Variant, string> = {
 
 const sizes: Record<Size, string> = {
   sm: 'text-[0.68rem] px-5 py-2.5 gap-2',
-  md: 'text-xs px-7 py-3.5 gap-2.5',
-  lg: 'text-sm px-9 py-4.5 gap-3',
+  md: 'text-xs px-6 py-3.5 gap-2.5 sm:px-7',
+  lg: 'text-[0.8rem] px-6 py-4 gap-3 sm:text-sm sm:px-9 sm:py-4.5',
 }
 
 export default function Button({
@@ -82,7 +82,9 @@ export default function Button({
   )
 
   const classes = [
-    'group relative inline-flex items-center justify-center overflow-hidden rounded-full font-semibold uppercase tracking-[0.2em] whitespace-nowrap',
+    'group relative inline-flex items-center justify-center overflow-hidden rounded-full text-center font-semibold uppercase leading-snug',
+    // long labels wrap on phones instead of being clipped; single line from sm up
+    'max-w-full tracking-[0.14em] text-balance sm:tracking-[0.2em] sm:whitespace-nowrap [&_svg]:shrink-0',
     'transition-[background-color,border-color,color,box-shadow,opacity] duration-300',
     // light sweep on hover
     'before:absolute before:inset-0 before:-translate-x-full before:transition-transform before:duration-700 before:ease-[var(--ease-luxe)] hover:before:translate-x-full',

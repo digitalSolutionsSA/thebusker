@@ -89,15 +89,15 @@ export default function HeroNextShow() {
       />
 
       {count > 1 && (
-        <div className="mt-6 flex items-center gap-4">
-          <button type="button" onClick={() => go(-1)} aria-label="Previous show" className="grid h-9 w-9 place-items-center rounded-full border border-gold/40 text-ivory transition-colors hover:border-gold hover:bg-gold/15">
+        <div className="mt-6 flex w-full max-w-[22rem] items-center gap-3 sm:w-auto sm:max-w-none sm:gap-4">
+          <button type="button" onClick={() => go(-1)} aria-label="Previous show" className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-gold/40 text-ivory transition-colors hover:border-gold hover:bg-gold/15">
             <ChevronLeft size={16} />
           </button>
-          <span className="w-12 text-center font-display text-xs tabular-nums tracking-[0.2em] text-ivory/70">
+          <span className="w-12 shrink-0 text-center font-display text-xs tabular-nums tracking-[0.2em] text-ivory/70">
             {String(active + 1).padStart(2, '0')}
             <span className="text-ivory/35"> / {String(count).padStart(2, '0')}</span>
           </span>
-          <div className="flex gap-2" role="tablist" aria-label="Upcoming shows">
+          <div className="flex min-w-0 flex-1 gap-1.5 sm:flex-none sm:gap-2" role="tablist" aria-label="Upcoming shows">
             {upcoming.map((s, i) => (
               <button
                 key={s.id}
@@ -106,7 +106,7 @@ export default function HeroNextShow() {
                 aria-selected={i === active}
                 aria-label={s.title}
                 onClick={() => select(i)}
-                className="relative h-[3px] w-9 overflow-hidden rounded-full bg-ivory/20"
+                className="relative h-[3px] min-w-0 flex-1 overflow-hidden rounded-full bg-ivory/20 sm:w-9 sm:flex-none"
               >
                 {i === active && (
                   <span
@@ -118,7 +118,7 @@ export default function HeroNextShow() {
               </button>
             ))}
           </div>
-          <button type="button" onClick={() => go(1)} aria-label="Next show" className="grid h-9 w-9 place-items-center rounded-full border border-gold/40 text-ivory transition-colors hover:border-gold hover:bg-gold/15">
+          <button type="button" onClick={() => go(1)} aria-label="Next show" className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-gold/40 text-ivory transition-colors hover:border-gold hover:bg-gold/15">
             <ChevronRight size={16} />
           </button>
         </div>

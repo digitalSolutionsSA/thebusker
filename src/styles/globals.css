@@ -41,17 +41,28 @@
   }
 
   body {
-    /* Walnut veneer under everything, darkened so it reads as rich wood rather than pattern */
-    background:
-      linear-gradient(rgb(15 11 7 / 0.86), rgb(15 11 7 / 0.92)),
-      url('/images/textures/walnut.webp') center / cover fixed,
-      var(--color-night);
     color: var(--color-ivory);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
     overflow-x: hidden;
+  }
+
+  /* Walnut veneer under everything, darkened so it reads as rich wood rather than pattern.
+     A fixed layer of its own instead of background-attachment: fixed, which repaints the whole
+     screen on every scroll frame; this one is composited once and just stays put. */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      linear-gradient(rgb(15 11 7 / 0.86), rgb(15 11 7 / 0.92)),
+      url('/images/textures/walnut.webp') center / cover,
+      var(--color-night);
+    transform: translateZ(0);
   }
 
   ::selection {
@@ -77,6 +88,12 @@
     font-weight: 600;
     letter-spacing: 0.42em;
     text-transform: uppercase;
+  }
+  /* Tighter tracking on phones so long eyebrows fit beside their decorative rules */
+  @media (max-width: 639px) {
+    .eyebrow {
+      letter-spacing: 0.26em;
+    }
   }
 
   /* Hairline with gold fade used as a luxury divider */
@@ -131,8 +148,8 @@
     position: absolute;
     inset: 0;
     pointer-events: none;
-    opacity: 0.07;
-    mix-blend-mode: overlay;
+    /* plain blending: mix-blend-mode forces every layer under it to be re-blended on each frame */
+    opacity: 0.045;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
 }
