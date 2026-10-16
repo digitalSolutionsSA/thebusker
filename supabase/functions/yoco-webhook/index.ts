@@ -1,8 +1,9 @@
 // Supabase Edge Function: receives Yoco payment events, marks bookings paid and their seats sold.
 // Deploy with: supabase functions deploy yoco-webhook --no-verify-jwt
 // Register it once with Yoco (POST https://payments.yoco.com/api/webhooks) and store the returned secret.
-// Requires secrets: YOCO_SECRET_KEY, YOCO_WEBHOOK_SECRET, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+// Requires secrets: YOCO_SECRET_KEY, YOCO_WEBHOOK_SECRET, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY
 import { createClient } from 'jsr:@supabase/supabase-js@2'
+import { sendTicketEmails } from '../_shared/sendTicketEmails.ts'
 
 const YOCO_SECRET_KEY = Deno.env.get('YOCO_SECRET_KEY')!
 const YOCO_WEBHOOK_SECRET = Deno.env.get('YOCO_WEBHOOK_SECRET')!
@@ -90,7 +91,13 @@ Deno.serve(async (req) => {
       return new Response('Could not confirm booking', { status: 500 })
     }
 
-    if (!confirmed) {
+    if (confirmed) {
+      // Ticket confirmation to the customer + copy to management. A failure answers non-2xx so Yoco
+      // redelivers the event; confirm_booking is a no-op for a paid booking, so only the email retries.
+      if (!(await sendTicketEmails(supabaseAdmin, bookingId))) {
+        return new Response('Could not send confirmation email', { status: 500 })
+      }
+    } else {
       // The hold expired and someone else bought a seat in the meantime: give the money back
       const { data: booking } = await supabaseAdmin.from('bookings').select('status, yoco_checkout_id').eq('id', bookingId).single()
       if (booking && booking.status !== 'refunded' && booking.status !== 'refund_failed') {

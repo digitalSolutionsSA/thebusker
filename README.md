@@ -74,6 +74,18 @@ webhook then marks them sold. A seat can never be sold twice — `seat_reservati
    supabase secrets set YOCO_SECRET_KEY=sk_... YOCO_WEBHOOK_SECRET=whsec_... SITE_URL=https://yourdomain.com
    ```
    Use the `sk_test_...` key first to try bookings without real money.
+6. Ticket confirmation emails (Resend): once a payment succeeds, the Yoco webhook emails the
+   customer their booking (reference, show, date, seats, total) from `tickets@thebusker.co.za`, and
+   sends the same email with a "new ticket sale" banner to `info@thebusker.co.za`. Each booking is
+   emailed once (`bookings.confirmation_emailed_at`). Run `supabase/migrations/0011_booking_emails.sql`,
+   verify thebusker.co.za in Resend, then:
+   ```bash
+   supabase secrets set RESEND_API_KEY=re_...
+   supabase functions deploy yoco-webhook --no-verify-jwt
+   ```
+   Optional overrides: `EMAIL_FROM` (default `The Busker <tickets@thebusker.co.za>`) and
+   `MANAGEMENT_EMAIL` (default `info@thebusker.co.za`). The email template is
+   `supabase/functions/_shared/ticketEmail.ts`.
 
 Changing the seating plan: edit `src/data/venueLayout.ts`, then run
 `npm run seats:sql > supabase/migrations/<next number>_venue_seats.sql` and apply it.
