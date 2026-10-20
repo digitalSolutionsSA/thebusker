@@ -25,6 +25,8 @@ export interface Show {
   price_upstairs_cents?: number | null
   /** 'whole' = tables are sold whole; 'seats' = seats at tables can be bought one by one */
   table_mode?: 'whole' | 'seats'
+  /** Floors not on sale online for this show (existing bookings there stay valid) */
+  closed_floors?: ('downstairs' | 'upstairs')[]
   /** Set when tickets are sold on another site: the show page links there instead of selling here */
   external_ticket_url?: string | null
   /** Name of that site, shown to buyers (e.g. "Quicket"); optional */

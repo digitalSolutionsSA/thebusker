@@ -2,9 +2,9 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { ArrowRight, Lock, X } from 'lucide-react'
 import type { Show } from '../../../types'
 import { createCheckoutSession } from '../../../lib/api'
-import { categoryPrice, formatPrice, seatsTotal } from '../../../lib/format'
+import { categoryPrice, formatPrice, openCategories, seatsTotal } from '../../../lib/format'
 import { seatsOf, toggleUnit, unitLabel as labelOf } from '../../../lib/seatSelection'
-import { floors, tablesById, type FloorId } from '../../../data/venueLayout'
+import { openFloors, tablesById, type FloorId } from '../../../data/venueLayout'
 import { useTakenSeats } from '../../../hooks/useTakenSeats'
 import { useInView } from '../../../hooks/useInView'
 import Button from '../../ui/Button'
@@ -17,7 +17,9 @@ export default function BookingPanel({ show }: { show: Show }) {
   const tableMode = show.table_mode ?? 'whole'
   const { taken, refresh, markTaken } = useTakenSeats(show.id)
 
-  const [floorId, setFloorId] = useState<FloorId>('downstairs')
+  // Floors the admin has taken off sale for this show aren't shown at all
+  const floors = openFloors(show)
+  const [floorId, setFloorId] = useState<FloorId>(floors[0]?.id ?? 'downstairs')
   const [selected, setSelected] = useState<Set<string>>(() => new Set())
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -26,14 +28,11 @@ export default function BookingPanel({ show }: { show: Show }) {
   const [error, setError] = useState<string | null>(null)
   const [formRef, formInView] = useInView<HTMLFormElement>('0px')
 
-  const floor = floors.find((f) => f.id === floorId)!
+  const floor = floors.find((f) => f.id === floorId) ?? floors[0]
   const seatIds = useMemo(() => [...selected].flatMap(seatsOf), [selected])
   const total = formatPrice(seatsTotal(show, seatIds), show.currency)
-  const prices = [
-    { label: tableMode === 'whole' ? 'Table seats' : 'Seats at tables', cents: categoryPrice(show, 'table') },
-    { label: 'Single seats', cents: categoryPrice(show, 'single') },
-    { label: 'Upstairs', cents: categoryPrice(show, 'upstairs') },
-  ]
+  const priceLabels = { table: tableMode === 'whole' ? 'Table seats' : 'Seats at tables', single: 'Single seats', upstairs: 'Upstairs' }
+  const prices = openCategories(show).map((c) => ({ label: priceLabels[c], cents: categoryPrice(show, c) }))
   const onePrice = prices.every((p) => p.cents === prices[0].cents)
 
   // Someone else got there first: drop those picks and say so
@@ -74,6 +73,7 @@ export default function BookingPanel({ show }: { show: Show }) {
       {/* Plan */}
       <div className="glass min-w-0 rounded-3xl p-3 sm:p-5">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3 px-1">
+          {floors.length > 1 ? (
           <div className="flex rounded-full border border-white/10 p-1" role="tablist" aria-label="Floor">
             {floors.map((f) => (
               <button
@@ -90,6 +90,9 @@ export default function BookingPanel({ show }: { show: Show }) {
               </button>
             ))}
           </div>
+          ) : (
+            <p className="px-1 text-xs font-semibold uppercase tracking-[0.15em] text-ivory">{floor.name} only</p>
+          )}
           <ul className="flex gap-4 text-[0.7rem] text-mist">
             <li className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-[3px] border border-gold/60 bg-ivory/10" /> Free</li>
             <li className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-[3px] bg-gold" /> Yours</li>
@@ -98,7 +101,7 @@ export default function BookingPanel({ show }: { show: Show }) {
         </div>
 
         <p className="mb-2 px-1 text-xs text-mist">
-          {floorId === 'downstairs'
+          {floor.id === 'downstairs'
             ? tableMode === 'whole'
               ? 'Tap a table to book the whole table, or tap a single seat along the walls and boxes.'
               : 'Tap the seats you want, at a table or along the walls. Tap a table to take all its free seats.'

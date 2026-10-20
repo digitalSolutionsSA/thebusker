@@ -1,7 +1,7 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import { X } from 'lucide-react'
 import type { Show } from '../../../types'
-import { createManualBooking, sourceLabels, type BookingSource } from '../../../lib/admin'
+import { createManualBooking, manualSources, sourceLabels, type BookingSource } from '../../../lib/admin'
 import { formatPrice, seatsTotal } from '../../../lib/format'
 import { seatsOf, toggleUnit, unitLabel as labelOf } from '../../../lib/seatSelection'
 import { floors, type FloorId } from '../../../data/venueLayout'
@@ -9,15 +9,15 @@ import { useTakenSeats } from '../../../hooks/useTakenSeats'
 import SeatMap from '../../../components/shows/SeatMap'
 import { adminInput, adminLabel, btnGold, btnOutline } from '../../../components/admin/ui'
 
-const manualSources: BookingSource[] = ['phone', 'whatsapp', 'pharmacy', 'door', 'other']
-
 /**
- * Record tickets sold outside the website (phone, WhatsApp, Euro Pharmacy, cash at the door).
- * The seats are taken straight away, so the website can't sell them again.
+ * Book seats or tables by hand: tickets sold outside the website (phone, WhatsApp, Euro Pharmacy,
+ * cash at the door), paid or still to pay. The seats are taken straight away, so the website can't
+ * sell them again. Staff can always book whole tables or single seats, whatever the show sells online.
  */
 export default function ManualSale({ show, onClose, onSaved }: { show: Show; onClose: () => void; onSaved: () => void }) {
   const { taken, refresh } = useTakenSeats(show.id)
   const [floorId, setFloorId] = useState<FloorId>('downstairs')
+  const [pickBy, setPickBy] = useState<'whole' | 'seats'>(show.table_mode ?? 'whole')
   const [selected, setSelected] = useState<Set<string>>(() => new Set())
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
@@ -77,12 +77,12 @@ export default function ManualSale({ show, onClose, onSaved }: { show: Show; onC
   }
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-night/95 backdrop-blur" role="dialog" aria-modal="true" aria-label="Record a sale">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-night/95 backdrop-blur" role="dialog" aria-modal="true" aria-label="New booking">
       <form onSubmit={submit} className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="font-display text-2xl uppercase tracking-[0.06em]">Record a sale</h2>
-            <p className="mt-1 text-sm text-mist">{show.title} · tickets sold by phone, WhatsApp, at the pharmacy or at the door.</p>
+            <h2 className="font-display text-2xl uppercase tracking-[0.06em]">New booking</h2>
+            <p className="mt-1 text-sm text-mist">{show.title} · book tables or seats for someone by phone, WhatsApp, at the pharmacy or at the door.</p>
           </div>
           <button type="button" onClick={onClose} className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/15 text-mist hover:text-ivory" aria-label="Close">
             <X size={18} />
@@ -103,12 +103,41 @@ export default function ManualSale({ show, onClose, onSaved }: { show: Show; onC
                   className={`flex-1 rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.15em] ${f.id === floorId ? 'bg-gold text-night' : 'text-mist'}`}
                 >
                   {f.name}
+                  {show.closed_floors?.includes(f.id) && <span className="font-normal normal-case tracking-normal opacity-70"> · closed online</span>}
                 </button>
               ))}
             </div>
+            {show.closed_floors?.includes(floorId) && (
+              <p className="mb-3 text-xs text-amber-200">{floor.name} isn't on sale on the website for this show. You can still book it here.</p>
+            )}
+            <div className="mb-3 flex items-center gap-3">
+              <span className="text-xs text-mist">Book</span>
+              <div className="flex rounded-full border border-white/10 p-1" role="radiogroup" aria-label="Book whole tables or single seats">
+                {([
+                  { id: 'whole', label: 'Whole tables' },
+                  { id: 'seats', label: 'Single seats' },
+                ] as const).map((o) => (
+                  <button
+                    key={o.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={pickBy === o.id}
+                    onClick={() => {
+                      if (o.id === pickBy) return
+                      // Table ids and seat ids mean different things on the plan, so start the pick again
+                      setPickBy(o.id)
+                      setSelected(new Set())
+                    }}
+                    className={`rounded-full px-3 py-1 text-xs font-semibold ${pickBy === o.id ? 'bg-gold text-night' : 'text-mist'}`}
+                  >
+                    {o.label}
+                  </button>
+                ))}
+              </div>
+            </div>
             <div className="-mx-1 overflow-x-auto">
               <div className="w-max min-w-full">
-                <SeatMap floor={floor} taken={taken} selected={selected} onToggle={toggle} tableMode={show.table_mode ?? 'whole'} />
+                <SeatMap floor={floor} taken={taken} selected={selected} onToggle={toggle} tableMode={pickBy} />
               </div>
             </div>
           </div>
@@ -206,7 +235,7 @@ export default function ManualSale({ show, onClose, onSaved }: { show: Show; onC
                 Cancel
               </button>
               <button type="submit" disabled={busy} className={`${btnGold} flex-1`}>
-                {busy ? 'Saving…' : 'Save sale'}
+                {busy ? 'Saving…' : 'Save booking'}
               </button>
             </div>
           </div>

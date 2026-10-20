@@ -2,7 +2,8 @@ import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, ImagePlus, Trash2 } from 'lucide-react'
 import type { ShowCategory } from '../../../types'
-import { deleteShow, getShow, saveShow, uploadPoster, type ShowInput } from '../../../lib/admin'
+import { deleteShow, getShow, listBookings, saveShow, uploadPoster, type ShowInput } from '../../../lib/admin'
+import { allSeats, floors, seatsById, type FloorId } from '../../../data/venueLayout'
 import { adminCard, adminInput, adminLabel, btnDanger, btnGold, btnOutline } from '../../../components/admin/ui'
 import { ADMIN_BASE } from '../../../config/site'
 
@@ -28,6 +29,7 @@ const blank: ShowInput = {
   price_single_cents: null,
   price_upstairs_cents: null,
   table_mode: 'whole',
+  closed_floors: [],
   external_ticket_url: null,
   external_ticket_seller: null,
 }
@@ -84,6 +86,8 @@ export default function AdminShowEdit() {
   const [tickets, setTickets] = useState('')
   const [tierPrices, setTierPrices] = useState<Record<Tier, string>>({ table: '', single: '', upstairs: '' })
   const [sold, setSold] = useState(0)
+  // Seats paid or reserved on each floor, so closing a floor says what stays booked there
+  const [soldByFloor, setSoldByFloor] = useState<Partial<Record<FloorId, number>>>({})
   const [loading, setLoading] = useState(editing)
   const [busy, setBusy] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -91,6 +95,20 @@ export default function AdminShowEdit() {
 
   useEffect(() => {
     if (!id) return
+    listBookings(id).then(
+      (list) => {
+        const counts: Partial<Record<FloorId, number>> = {}
+        for (const b of list) {
+          if (b.status !== 'paid' && b.status !== 'reserved') continue
+          for (const seat of b.seat_ids) {
+            const floor = seatsById.get(seat)?.floor
+            if (floor) counts[floor] = (counts[floor] ?? 0) + 1
+          }
+        }
+        setSoldByFloor(counts)
+      },
+      () => {}, // Only used for the hint under "Floors on sale"
+    )
     getShow(id).then(
       (s) => {
         setForm({
@@ -109,6 +127,7 @@ export default function AdminShowEdit() {
           price_single_cents: s.price_single_cents ?? null,
           price_upstairs_cents: s.price_upstairs_cents ?? null,
           table_mode: s.table_mode ?? 'whole',
+          closed_floors: s.closed_floors ?? [],
           external_ticket_url: s.external_ticket_url ?? null,
           external_ticket_seller: s.external_ticket_seller ?? null,
         })
@@ -202,6 +221,10 @@ export default function AdminShowEdit() {
       setBusy(false)
     }
   }
+
+  const onSale = form.closed_floors.length
+    ? `only ${floors.filter((f) => !form.closed_floors.includes(f.id)).map((f) => f.name.toLowerCase()).join(' and ')} is`
+    : 'the whole venue is'
 
   if (loading) return <p className="text-mist">Loading…</p>
 
@@ -380,6 +403,45 @@ export default function AdminShowEdit() {
               </div>
 
               <div>
+                <span className={adminLabel}>Floors on sale</span>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {floors.map((f) => {
+                    const open = !form.closed_floors.includes(f.id)
+                    const lastOpen = open && form.closed_floors.length === floors.length - 1
+                    const seats = allSeats.filter((s) => s.floor === f.id).length
+                    const booked = soldByFloor[f.id] ?? 0
+                    return (
+                      <label
+                        key={f.id}
+                        className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition-colors ${open ? 'border-gold bg-gold/10' : 'border-white/15 hover:border-white/30'} ${lastOpen ? 'cursor-not-allowed' : ''}`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={open}
+                          disabled={lastOpen}
+                          onChange={(e) =>
+                            set('closed_floors', e.target.checked ? form.closed_floors.filter((c) => c !== f.id) : [...form.closed_floors, f.id])
+                          }
+                          className="mt-0.5 h-4 w-4 accent-[#e2bd6d]"
+                        />
+                        <span>
+                          <span className="block text-sm font-semibold">{f.name}</span>
+                          <span className="mt-0.5 block text-xs leading-relaxed text-mist">
+                            {seats} seats{booked > 0 && ` · ${booked} booked`}
+                            {!open && (booked > 0 ? ' · closed online, these bookings stay valid' : ' · closed online')}
+                          </span>
+                        </span>
+                      </label>
+                    )
+                  })}
+                </div>
+                <p className="mt-2 text-xs text-mist">
+                  Untick a floor to stop selling it on the website, any time (also after tickets are sold). Bookings already there
+                  stay on the guest list, and you can still add bookings there by hand. At least one floor stays open.
+                </p>
+              </div>
+
+              <div>
                 <span className={adminLabel}>Tables</span>
                 <div className="grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label="Tables">
                   {tableModes.map((o) => (
@@ -420,8 +482,8 @@ export default function AdminShowEdit() {
           : form.seating === 'general'
           ? 'General admission: no seat map on the website, and the show sells out at the number of tickets above.'
           : form.table_mode === 'whole'
-            ? 'Seating plan: the whole venue is for sale. Tables are sold whole, at the table seat price for each seat.'
-            : 'Seating plan: the whole venue is for sale, and seats at tables can be bought one by one.'}
+            ? `Seating plan: ${onSale} for sale. Tables are sold whole, at the table seat price for each seat.`
+            : `Seating plan: ${onSale} for sale, and seats at tables can be bought one by one.`}
       </p>
 
       {error && <p role="alert" className="mt-4 rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">{error}</p>}

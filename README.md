@@ -96,8 +96,19 @@ The old Stripe functions (`create-checkout-session`, `stripe-webhook`) are no lo
 
 Use the staff portal at **`/dssa-portals`** (not linked from the site; the address is `ADMIN_BASE` in `src/config/site.ts`): add, edit, hide or delete shows (title, date, door time,
 price per seat, type, description, poster upload); see every booking per show; check guests in at
-the door; and record sales made outside the website (phone, WhatsApp, Euro Pharmacy, at the door)
-so those seats can't be sold online.
+the door; and add bookings by hand with **New booking** on a show's guest list (phone, WhatsApp,
+Euro Pharmacy, at the door) so those seats can't be sold online. Staff can book whole tables or
+single seats at a table (whatever the show sells online), enter the guest's name, phone and email,
+and mark it Paid or Reserved ("Mark paid" on the guest list once the money comes in). Single-seat
+staff bookings need `supabase/migrations/0012_staff_split_tables.sql`. **Edit** on a booking
+corrects the contact details and notes; on bookings added by hand also the source, amount and
+paid / not paid yet (needs `0013_edit_booking.sql`). To move a booking to other seats, cancel it and
+add a new one.
+
+**Floors on sale** (Edit show, seating-plan shows): untick Downstairs or Upstairs to stop selling
+that floor on the website, at any time, also after tickets are sold. Existing bookings there stay
+valid, staff can still book it by hand, and the "from" price and seats left follow the open floors.
+The database refuses online checkouts for seats on a closed floor (`0014_closed_floors.sql`).
 
 ### Giving someone access to the admin portal
 

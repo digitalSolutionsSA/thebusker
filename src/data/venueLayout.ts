@@ -206,6 +206,12 @@ const upstairs: Floor = {
 
 export const floors: Floor[] = [downstairs, upstairs]
 
+/** Floors on sale online for a show (shows.closed_floors lists the ones taken off sale; at least one stays open) */
+export function openFloors(show: { closed_floors?: FloorId[] | null }): Floor[] {
+  const open = floors.filter((f) => !show.closed_floors?.includes(f.id))
+  return open.length ? open : floors
+}
+
 export interface SeatInfo {
   id: string
   floor: FloorId

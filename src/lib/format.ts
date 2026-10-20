@@ -4,7 +4,17 @@ import { seatCategory, type SeatCategory } from '../data/venueLayout'
 export const formatPrice = (cents: number, currency = 'ZAR') =>
   new Intl.NumberFormat('en-ZA', { style: 'currency', currency }).format(cents / 100)
 
-type PricedShow = Pick<Show, 'price_cents' | 'seating' | 'price_table_cents' | 'price_single_cents' | 'price_upstairs_cents' | 'external_ticket_url'>
+type PricedShow = Pick<Show, 'price_cents' | 'seating' | 'price_table_cents' | 'price_single_cents' | 'price_upstairs_cents' | 'external_ticket_url' | 'closed_floors'>
+
+/** Ticket types on sale online: tables and single seats are downstairs, the balcony upstairs */
+export function openCategories(show: Pick<Show, 'closed_floors'>): SeatCategory[] {
+  const closed = show.closed_floors ?? []
+  const open: SeatCategory[] = [
+    ...(closed.includes('downstairs') ? [] : (['table', 'single'] as const)),
+    ...(closed.includes('upstairs') ? [] : (['upstairs'] as const)),
+  ]
+  return open.length ? open : ['table', 'single', 'upstairs']
+}
 
 /** Price of one seat of a ticket type (seating-plan shows); unset types use the show's main price */
 export function categoryPrice(show: PricedShow, category: SeatCategory): number {
@@ -20,7 +30,7 @@ export const seatsTotal = (show: PricedShow, seatIds: string[]) =>
 export function priceLabel(show: PricedShow & { currency: string }): string {
   // Shows sold on another site have a single price, entered in the admin portal
   if (show.seating === 'general' || show.external_ticket_url) return formatPrice(show.price_cents, show.currency)
-  const prices = (['table', 'single', 'upstairs'] as const).map((c) => categoryPrice(show, c))
+  const prices = openCategories(show).map((c) => categoryPrice(show, c))
   const min = Math.min(...prices)
   return `${min === Math.max(...prices) ? '' : 'From '}${formatPrice(min, show.currency)}`
 }

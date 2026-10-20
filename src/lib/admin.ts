@@ -1,5 +1,7 @@
 import { supabase } from './supabase'
 import type { Show, ShowCategory } from '../types'
+import { seatsById, type FloorId } from '../data/venueLayout'
+import { categoryPrice, openCategories } from './format'
 
 // Data access for the staff portal (ADMIN_BASE). Everything here runs as the signed-in staff member; the
 // database's row-level security and staff-only functions decide what they may read and change.
@@ -32,6 +34,9 @@ export const sourceLabels: Record<BookingSource, string> = {
   door: 'At the door',
   other: 'Other',
 }
+
+/** Where staff can say a booking added by hand came from */
+export const manualSources: BookingSource[] = ['phone', 'whatsapp', 'pharmacy', 'door', 'other']
 
 export { bookingRef } from './format'
 
@@ -83,6 +88,8 @@ export interface ShowInput {
   price_upstairs_cents: number | null
   /** Tables sold whole, or seat by seat */
   table_mode: 'whole' | 'seats'
+  /** Floors taken off sale online (bookings already there stay valid) */
+  closed_floors: FloorId[]
   /** Tickets sold on another site (null = sold here). price_cents is then that site's price. */
   external_ticket_url: string | null
   external_ticket_seller: string | null
@@ -99,20 +106,29 @@ const slugify = (s: string) =>
     .slice(0, 60)
 
 export async function saveShow(input: ShowInput, id?: string): Promise<Show> {
-  // Seat-map shows sell the whole venue, so their capacity is the number of seats in the plan
+  // Seat-map shows sell the open floors, so their capacity is the number of seats on them
   let capacity = input.capacity
   if (input.external_ticket_url) {
     // Sold elsewhere: keep the seat prices as they are, in case the show comes back to this site
   } else if (input.seating === 'reserved') {
-    // The website shows "from" the cheapest ticket type
-    const tiers = [input.price_table_cents, input.price_single_cents, input.price_upstairs_cents].filter((p): p is number => p !== null)
-    if (tiers.length) input = { ...input, price_cents: Math.min(...tiers) }
+    // The website shows "from" the cheapest ticket type that's on sale
+    const tiers = openCategories(input).map((c) => categoryPrice(input, c))
+    input = { ...input, price_cents: Math.min(...tiers) }
   } else {
-    input = { ...input, price_table_cents: null, price_single_cents: null, price_upstairs_cents: null }
+    input = { ...input, price_table_cents: null, price_single_cents: null, price_upstairs_cents: null, closed_floors: [] }
   }
   if (input.seating === 'reserved') {
-    const { count } = await db().from('venue_seats').select('id', { count: 'exact', head: true })
+    let seats = db().from('venue_seats').select('id', { count: 'exact', head: true })
+    if (input.closed_floors.length) seats = seats.not('floor', 'in', `(${input.closed_floors.join(',')})`)
+    const { count, error } = await seats
+    fail(error)
     capacity = count ?? 0
+    // Seats already sold on a closed floor still count towards tickets_sold, so they count here too
+    // (otherwise "seats left" would come out too low)
+    if (id && input.closed_floors.length) {
+      const booked = (await listBookings(id)).filter((b) => b.status === 'paid' || b.status === 'reserved')
+      capacity += booked.flatMap((b) => b.seat_ids).filter((s) => input.closed_floors.includes(seatsById.get(s)?.floor as FloorId)).length
+    }
   }
 
   if (id) {
@@ -201,6 +217,31 @@ export async function markPaid(bookingId: string) {
 
 export async function cancelBooking(bookingId: string) {
   const { error } = await db().rpc('cancel_booking', { p_booking_id: bookingId })
+  fail(error)
+}
+
+export interface BookingEdit {
+  name: string
+  phone: string
+  email: string
+  notes: string
+  /** Bookings added by hand only; online bookings keep their source, amount and status */
+  source?: BookingSource
+  paid?: boolean
+  amountCents?: number
+}
+
+export async function updateBooking(bookingId: string, edit: BookingEdit) {
+  const { error } = await db().rpc('update_booking', {
+    p_booking_id: bookingId,
+    p_name: edit.name,
+    p_phone: edit.phone,
+    p_email: edit.email,
+    p_notes: edit.notes,
+    p_source: edit.source ?? null,
+    p_paid: edit.paid ?? null,
+    p_amount_cents: edit.amountCents ?? null,
+  })
   fail(error)
 }
 

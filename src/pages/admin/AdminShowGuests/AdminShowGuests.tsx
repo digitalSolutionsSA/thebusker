@@ -17,6 +17,7 @@ import { formatLongDate, formatPrice } from '../../../lib/format'
 import { describeSeats } from '../../../data/venueLayout'
 import { adminCard, adminInput, badge, btnDanger, btnGold, btnGreen, btnOutline } from '../../../components/admin/ui'
 import ManualSale from './ManualSale'
+import EditBooking from './EditBooking'
 
 const REFRESH_MS = 15_000
 
@@ -59,6 +60,7 @@ export default function AdminShowGuests() {
   const [filter, setFilter] = useState<Filter>('guests')
   const [busyId, setBusyId] = useState<string | null>(null)
   const [selling, setSelling] = useState(false)
+  const [editing, setEditing] = useState<Booking | null>(null)
 
   const load = useCallback(async () => {
     if (!id) return
@@ -144,7 +146,7 @@ export default function AdminShowGuests() {
         </div>
         <div className="flex gap-2">
           <button type="button" onClick={() => setSelling(true)} className={btnGold}>
-            <Plus size={14} /> Record a sale
+            <Plus size={14} /> New booking
           </button>
           <Link to={`${ADMIN_BASE}/shows/${show.id}/edit`} className={btnOutline}>
             <Pencil size={14} /> Edit
@@ -198,6 +200,7 @@ export default function AdminShowGuests() {
             busy={busyId === b.id}
             onCheckIn={(v) => act(b.id, () => setCheckedIn(b.id, v))}
             onPaid={() => act(b.id, () => markPaid(b.id))}
+            onEdit={() => setEditing(b)}
             onCancel={() => {
               const online = b.source === 'online' && b.status === 'paid'
               const msg = `Cancel ${b.name}'s booking and free ${b.quantity} seat(s)?${online ? '\n\nThis was paid online: refund it in your Yoco portal as well.' : ''}`
@@ -214,6 +217,17 @@ export default function AdminShowGuests() {
           onSaved={() => {
             setSelling(false)
             setFilter('guests')
+            load()
+          }}
+        />
+      )}
+
+      {editing && (
+        <EditBooking
+          booking={editing}
+          onClose={() => setEditing(null)}
+          onSaved={() => {
+            setEditing(null)
             load()
           }}
         />
@@ -247,12 +261,14 @@ function BookingCard({
   busy,
   onCheckIn,
   onPaid,
+  onEdit,
   onCancel,
 }: {
   booking: Booking
   busy: boolean
   onCheckIn: (checkedIn: boolean) => void
   onPaid: () => void
+  onEdit: () => void
   onCancel: () => void
 }) {
   const guest = isGuest(b)
@@ -314,7 +330,12 @@ function BookingCard({
       </div>
 
       {(guest || b.status === 'pending') && (
-        <div className="mt-3 border-t border-white/5 pt-3">
+        <div className="mt-3 flex gap-2 border-t border-white/5 pt-3">
+          {guest && (
+            <button type="button" onClick={onEdit} disabled={busy} className={`${btnOutline} px-3 py-1.5 text-[0.62rem]`}>
+              <Pencil size={12} /> Edit
+            </button>
+          )}
           <button type="button" onClick={onCancel} disabled={busy} className={`${btnDanger} px-3 py-1.5 text-[0.62rem]`}>
             Cancel booking
           </button>
