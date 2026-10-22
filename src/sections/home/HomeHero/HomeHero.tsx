@@ -2,6 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { ArrowRight } from 'lucide-react'
 import { gsap, prefersReducedMotion } from '../../../lib/gsap'
 import { introReady, registerAsset } from '../../../lib/intro'
+import { useSwipe } from '../../../hooks/useSwipe'
 import { HERO_SLIDES } from '../../../data/heroSlides'
 import { createHeroScene, type HeroSceneHandle } from '../../../components/three/HeroScene'
 import Button from '../../../components/ui/Button'
@@ -127,6 +128,9 @@ export default function HomeHero() {
     }
   }, [startTimer])
 
+  // Swipe the background slides on touch screens; the shows deck handles its own swipes
+  useSwipe(root, (dir) => go((slide + dir + HERO_SLIDES.length) % HERO_SLIDES.length), '[data-hero-next]')
+
   const current = HERO_SLIDES[slide]
 
   return (
@@ -191,7 +195,7 @@ export default function HomeHero() {
             aria-selected={slide === i}
             aria-label={`Slide ${i + 1}`}
             onClick={() => i !== slide && go(i)}
-            className={`group flex flex-col items-start gap-2 text-[0.65rem] font-semibold tracking-[0.3em] transition-colors ${
+            className={`group -my-3 flex flex-col items-start gap-2 py-3 text-[0.65rem] font-semibold tracking-[0.3em] transition-colors ${
               slide === i ? 'text-gold' : 'text-ivory/45 hover:text-ivory'
             }`}
           >

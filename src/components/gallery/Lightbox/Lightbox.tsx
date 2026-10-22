@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 import type { GalleryImage } from '../../../data/gallery'
 import { gsap, useGSAP } from '../../../lib/gsap'
+import { useSwipe } from '../../../hooks/useSwipe'
 
 interface Props {
   images: GalleryImage[]
@@ -15,6 +16,8 @@ export default function Lightbox({ images, index, onClose, onNavigate }: Props) 
   const image = images[index]
   const prev = () => onNavigate((index - 1 + images.length) % images.length)
   const next = () => onNavigate((index + 1) % images.length)
+
+  useSwipe(root, images.length > 1 ? (dir) => (dir === 1 ? next() : prev()) : undefined)
 
   useGSAP(() => {
     gsap.from(root.current, { opacity: 0, duration: 0.4, ease: 'power2.out' })

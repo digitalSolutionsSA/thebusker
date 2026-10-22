@@ -1,12 +1,17 @@
 import { useRef, type ReactNode } from 'react'
 import type { Show } from '../../../types'
 import { gsap, useGSAP, prefersReducedMotion } from '../../../lib/gsap'
+import { useSwipe } from '../../../hooks/useSwipe'
 import ShowPoster from '../ShowPoster'
 
 interface Props {
   shows: Show[]
   active: number
   onSelect: (index: number) => void
+  /** Tap/click on the front poster (touch screens have no hover, so this is how they reveal details) */
+  onFrontTap?: () => void
+  /** Horizontal swipe on a touch screen: 1 = next, -1 = previous */
+  onSwipe?: (dir: 1 | -1) => void
   /** Width classes for the deck (the height follows the poster ratio) */
   sizeClassName?: string
   /** Layer drawn over the front poster (e.g. its details). The pointer tilt is off when one is set. */
@@ -29,6 +34,8 @@ export default function PosterDeck({
   shows,
   active,
   onSelect,
+  onFrontTap,
+  onSwipe,
   sizeClassName = 'w-[min(17rem,62vw)] sm:w-[19rem] lg:w-[20rem]',
   overlay,
 }: Props) {
@@ -36,6 +43,8 @@ export default function PosterDeck({
   const root = useRef<HTMLDivElement>(null)
   const n = shows.length
   const depthOf = (i: number) => (i - active + n) % n
+
+  useSwipe(root, onSwipe)
 
   // Deal the cards into their slots whenever the active show changes
   useGSAP(
@@ -92,11 +101,11 @@ export default function PosterDeck({
             key={show.id}
             type="button"
             data-deck-card={i}
-            onClick={() => depth !== 0 && onSelect(i)}
+            onClick={() => (depth === 0 ? onFrontTap?.() : onSelect(i))}
             tabIndex={depth === 0 ? -1 : 0}
             aria-label={depth === 0 ? undefined : `Show ${show.title}`}
             aria-hidden={depth === 0 || undefined}
-            className={`absolute inset-0 origin-bottom-left will-change-transform ${depth === 0 ? 'cursor-default' : 'cursor-pointer'}`}
+            className={`absolute inset-0 origin-bottom-left will-change-transform [-webkit-tap-highlight-color:transparent] ${depth === 0 && !onFrontTap ? 'cursor-default' : 'cursor-pointer'}`}
             style={{ zIndex: 10 - depth }}
           >
             <div data-tilt className="relative h-full w-full [transform-style:preserve-3d]">

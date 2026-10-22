@@ -64,7 +64,7 @@ export default function Pillars() {
               <div>
                 <span className="mb-5 block h-px w-8 bg-gold transition-[width] duration-700 ease-[var(--ease-luxe)] group-hover:w-20" />
                 <h3 className="type-heavy text-gold-leaf text-3xl sm:text-4xl">{title}</h3>
-                <p className="mt-3 max-w-xs text-sm leading-relaxed text-ivory/75 lg:max-h-0 lg:overflow-hidden lg:opacity-0 lg:transition-all lg:duration-700 lg:group-hover:max-h-24 lg:group-hover:opacity-100">
+                <p className="mt-3 max-w-xs text-sm leading-relaxed text-ivory/75 lg:[@media(hover:hover)]:max-h-0 lg:[@media(hover:hover)]:overflow-hidden lg:[@media(hover:hover)]:opacity-0 lg:transition-all lg:duration-700 lg:group-hover:max-h-24 lg:group-hover:opacity-100">
                   {text}
                 </p>
                 <span className="mt-5 inline-flex items-center gap-2 text-[0.62rem] font-semibold uppercase tracking-[0.3em] text-gold">

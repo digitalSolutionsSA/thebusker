@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useShows } from '../../../hooks/useShows'
@@ -22,18 +22,24 @@ type Phase = (typeof PHASES)[number]['id']
 /**
  * "Up next" beside the hero headline: the next four shows as a fanned poster deck. Each front poster
  * shows clear for a second, blurs for two while its countdown and booking button sit over it, shows
- * clear again, then the next show is dealt to the front. Hovering or focusing holds the details on screen.
+ * clear again, then the next show is dealt to the front. Hovering or focusing holds the details on screen;
+ * on touch screens a tap on the front poster pins them (tap again or anywhere else to let go) and a
+ * sideways swipe deals the next or previous show.
  */
 export default function HeroNextShow() {
   const { shows } = useShows()
   const upcoming = shows.slice(0, MAX_SHOWS)
+  const container = useRef<HTMLDivElement>(null)
   const [active, setActive] = useState(0)
   const [phase, setPhase] = useState<Phase>('intro')
   // Hovering holds the countdown on screen; so does keyboard focus. A mouse click leaves focus on the
   // button it pressed, which must not keep the poster blurred once the pointer has moved away.
+  // Only a real mouse counts as hovering: a touch fires enter/leave around every tap, which made the
+  // details flash on and straight off again.
   const [hovered, setHovered] = useState(false)
   const [keyboardFocus, setKeyboardFocus] = useState(false)
-  const held = hovered || keyboardFocus
+  const [pinned, setPinned] = useState(false)
+  const held = hovered || keyboardFocus || pinned
   const show = upcoming[active]
   const count = upcoming.length
   const still = prefersReducedMotion()
@@ -52,20 +58,33 @@ export default function HeroNextShow() {
     return () => window.clearTimeout(t)
   }, [phase, active, held, still, count])
 
+  // A tap anywhere outside the deck lets go of pinned details
+  useEffect(() => {
+    if (!pinned) return
+    const away = (e: PointerEvent) => {
+      if (!container.current?.contains(e.target as Node)) setPinned(false)
+    }
+    document.addEventListener('pointerdown', away)
+    return () => document.removeEventListener('pointerdown', away)
+  }, [pinned])
+
   if (!show) return null
 
   const select = (i: number) => {
     setActive(i)
     setPhase('intro')
+    setPinned(false)
   }
   const go = (step: number) => select((active + step + count) % count)
   const showDetails = held || still || phase === 'details'
+  const togglePinned = () => setPinned((p) => !p)
 
   return (
     <div
+      ref={container}
       className="relative flex flex-col items-center"
-      onPointerEnter={() => setHovered(true)}
-      onPointerLeave={() => setHovered(false)}
+      onPointerEnter={(e) => e.pointerType === 'mouse' && setHovered(true)}
+      onPointerLeave={(e) => e.pointerType === 'mouse' && setHovered(false)}
       onFocus={(e) => setKeyboardFocus(e.target.matches(':focus-visible'))}
       onBlur={() => setKeyboardFocus(false)}
     >
@@ -84,8 +103,10 @@ export default function HeroNextShow() {
         shows={upcoming}
         active={active}
         onSelect={select}
+        onFrontTap={togglePinned}
+        onSwipe={count > 1 ? go : undefined}
         sizeClassName="w-[min(16.5rem,64vw)] sm:w-[18rem] xl:w-[19.5rem] 2xl:w-[21rem]"
-        overlay={<PosterDetails key={show.id} show={show} visible={showDetails} first={active === 0} />}
+        overlay={<PosterDetails key={show.id} show={show} visible={showDetails} first={active === 0} onTap={togglePinned} />}
       />
 
       {count > 1 && (
@@ -128,11 +149,13 @@ export default function HeroNextShow() {
 }
 
 /** Blur + darken over the front poster with the show's countdown, details and booking button. */
-function PosterDetails({ show, visible, first }: { show: Show; visible: boolean; first: boolean }) {
+function PosterDetails({ show, visible, first, onTap }: { show: Show; visible: boolean; first: boolean; onTap: () => void }) {
   const bok = show.category === 'bok-town'
   return (
     <div
       aria-hidden={!visible}
+      // While shown it covers the front poster and takes its taps; links inside navigate as normal
+      onClick={(e) => !(e.target as Element).closest('a') && onTap()}
       className={`absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-night/95 via-night/70 to-night/35 p-5 backdrop-blur-[6px] transition-opacity duration-500 ease-out ${
         visible ? 'pointer-events-auto opacity-100' : 'opacity-0'
       }`}
