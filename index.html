@@ -31,6 +31,19 @@
       />
     </noscript>
     <link rel="preload" as="image" href="/brand/logo-white.webp" type="image/webp" />
+    <!-- Show data comes from Supabase: open that connection while the app code downloads -->
+    <link rel="preconnect" href="%VITE_SUPABASE_URL%" crossorigin />
+    <!-- Home page: start the hero photo (the largest thing on screen) in parallel with the JS -->
+    <script>
+      if (location.pathname === '/') {
+        var l = document.createElement('link')
+        l.rel = 'preload'
+        l.as = 'image'
+        l.href = '/images/hero/busker-bar.webp'
+        l.setAttribute('fetchpriority', 'high')
+        document.head.appendChild(l)
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
