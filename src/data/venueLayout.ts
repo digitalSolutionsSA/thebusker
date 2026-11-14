@@ -188,19 +188,65 @@ const downstairs: Floor = {
   ],
 }
 
-// ── Upstairs balcony (U shape around the hall, open towards the stage) ──────────
-// Drawn on the same canvas as downstairs (same viewBox, stage in the same place) so both floors
-// show at the same size and scale; the U runs along the hall's side walls and over the sound box.
+// ── Upstairs balcony ─────────────────────────────────────────────────────────
+// Traced from the venue's upstairs drawing (stage at x 80–640, y 35–137 on that drawing) and made
+// mirror-symmetric: every angled wall and seat row runs at 45°, the right side mirrors the left.
+// The stage is drawn at the same place and width as downstairs; the floor runs a little deeper.
+
+const UP_SCALE = 620 / 560
+const round1 = (n: number) => Math.round(n * 10) / 10
+/** Point on the upstairs drawing, in floor units */
+const up = (x: number, y: number) => ({ x: round1(70 + (x - 80) * UP_SCALE), y: round1(85 + (y - 35) * UP_SCALE) })
+/** n evenly spaced seats between two points of the drawing */
+const upLine = (n: number, ax: number, ay: number, bx: number, by: number) => {
+  const a = up(ax, ay)
+  const b = up(bx, by)
+  return line(n, a.x, a.y, b.x, b.y)
+}
+/** Mirror across the centre line of the stage */
+const mirror = <T extends { x: number }>(pts: T[]): T[] => pts.map((p) => ({ ...p, x: round1(760 - p.x) }))
+
+const sideSeats = upLine(30, 53, 145, 53, 683)
+const row1Corner = upLine(6, 88, 728, 153, 793)
+const row2Corner = upLine(5, 90, 808, 142, 860)
+const row3Corner = upLine(8, 62, 867, 154, 959)
+
+/** Walls and the sound box of the upstairs plan, in floor units (drawn by SeatMap) */
+const polyline = (pts: [number, number][]) =>
+  pts.map(([x, y], i) => `${i ? 'L' : 'M'}${up(x, y).x} ${up(x, y).y}`).join(' ')
+const soundTopLeft = up(170, 923)
+const soundBottomRight = up(550, 1026)
+export const upstairsPlan = {
+  stage: { ...up(80, 35), w: round1(560 * UP_SCALE), h: round1(102 * UP_SCALE) },
+  sound: { ...soundTopLeft, w: round1(soundBottomRight.x - soundTopLeft.x), h: round1(soundBottomRight.y - soundTopLeft.y) },
+  walls: [
+    polyline([[80, 137], [80, 690], [210, 820], [510, 820], [640, 690], [640, 137]]),
+    polyline([[82, 778], [174, 870], [546, 870], [638, 778]]),
+    polyline([[60, 841], [170, 951]]),
+    polyline([[660, 841], [550, 951]]),
+  ].join(' '),
+  hallCentre: up(360, 480),
+}
 
 const upstairs: Floor = {
   id: 'upstairs',
   name: 'Upstairs',
-  viewBox: downstairs.viewBox,
+  viewBox: '20 40 745 1160',
   tables: [],
   singles: [
-    ...singles('UL', 'Balcony left', line(16, 90, 210, 90, 850)),
-    ...singles('UR', 'Balcony right', line(16, 690, 210, 690, 850)),
-    ...singles('UB', 'Balcony back', line(16, 150, 905, 630, 905)),
+    ...singles('UL', 'Balcony left', sideSeats),
+    ...singles('UR', 'Balcony right', mirror(sideSeats)),
+    // Row 1 (nearest the hall): angled corners either side of a straight row
+    ...singles('UBL', 'Balcony back row 1 left', row1Corner, 45),
+    ...singles('UB', 'Balcony back row 1', upLine(10, 277, 834, 443, 834)),
+    ...singles('UBR', 'Balcony back row 1 right', mirror(row1Corner), -45),
+    // Row 2
+    ...singles('UCL', 'Balcony back row 2 left', row2Corner, 45),
+    ...singles('UC', 'Balcony back row 2', upLine(12, 258, 895, 462, 895)),
+    ...singles('UCR', 'Balcony back row 2 right', mirror(row2Corner), -45),
+    // Row 3: angled rows either side of the sound box
+    ...singles('UDL', 'Balcony back row 3 left', row3Corner, 45),
+    ...singles('UDR', 'Balcony back row 3 right', mirror(row3Corner), -45),
   ],
 }
 

@@ -1,5 +1,5 @@
 import type { KeyboardEvent } from 'react'
-import { SEAT_SIZE, seatsById, type Floor, type SeatSpot } from '../../../data/venueLayout'
+import { SEAT_SIZE, seatsById, upstairsPlan, type Floor, type SeatSpot } from '../../../data/venueLayout'
 
 /** onToggle id for "select every free seat at this table" in seat-by-seat mode */
 export const TABLE_PREFIX = 'table:'
@@ -200,19 +200,20 @@ function DownstairsDecor() {
 }
 
 function UpstairsDecor() {
+  const { stage, sound, walls, hallCentre } = upstairsPlan
   return (
     <g aria-hidden className="pointer-events-none">
-      {/* Same stage position and size as the downstairs plan */}
-      <rect x={70} y={85} width={620} height={75} rx={3} strokeDasharray="6 6" className="fill-gold/5 stroke-gold/40" strokeWidth={1.5} />
-      <text x={380} y={123} textAnchor="middle" dominantBaseline="central" className="fill-gold/80 text-[20px] font-bold tracking-[0.3em]">
+      <rect x={stage.x} y={stage.y} width={stage.w} height={stage.h} rx={3} strokeDasharray="6 6" className="fill-gold/5 stroke-gold/40" strokeWidth={1.5} />
+      <text x={stage.x + stage.w / 2} y={stage.y + stage.h / 2} textAnchor="middle" dominantBaseline="central" className="fill-gold/80 text-[20px] font-bold tracking-[0.3em]">
         STAGE (BELOW)
       </text>
-      <path d="M60 180 V935 H720 V180 M120 180 V875 H660 V180" className={wall} strokeWidth={2.5} />
-      <text x={390} y={520} textAnchor="middle" className="fill-ivory/25 text-[18px] font-semibold uppercase tracking-[0.3em]">
+      <path d={walls} className={wall} strokeWidth={2.5} />
+      <text x={hallCentre.x} y={hallCentre.y} textAnchor="middle" className="fill-ivory/25 text-[18px] font-semibold uppercase tracking-[0.3em]">
         Open to the hall
       </text>
-      <text x={390} y={968} textAnchor="middle" className="fill-mist text-[11px] font-semibold uppercase tracking-[0.2em]">
-        Balcony back
+      <rect x={sound.x} y={sound.y} width={sound.w} height={sound.h} rx={3} className="fill-ivory/5 stroke-ivory/30" strokeWidth={1.5} />
+      <text x={sound.x + sound.w / 2} y={sound.y + sound.h / 2} textAnchor="middle" dominantBaseline="central" className="fill-ivory/60 text-[15px] font-bold tracking-[0.3em]">
+        SOUND BOX
       </text>
     </g>
   )
