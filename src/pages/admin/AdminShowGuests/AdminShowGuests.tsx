@@ -224,6 +224,7 @@ export default function AdminShowGuests() {
 
       {editing && (
         <EditBooking
+          show={show}
           booking={editing}
           onClose={() => setEditing(null)}
           onSaved={() => {

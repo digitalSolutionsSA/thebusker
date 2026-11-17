@@ -245,6 +245,12 @@ export async function updateBooking(bookingId: string, edit: BookingEdit) {
   fail(error)
 }
 
+/** Move a booking on a seating-plan show to other seats (swap, add or drop seats); keeps everything else */
+export async function changeBookingSeats(bookingId: string, seatIds: string[]) {
+  const { error } = await db().rpc('change_booking_seats', { p_booking_id: bookingId, p_seat_ids: seatIds })
+  fail(error)
+}
+
 export interface ManualSaleInput {
   showId: string
   /** Seat-map shows */

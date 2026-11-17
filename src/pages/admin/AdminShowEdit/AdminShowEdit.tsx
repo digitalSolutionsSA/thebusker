@@ -460,6 +460,10 @@ export default function AdminShowEdit() {
                     </button>
                   ))}
                 </div>
+                <p className="mt-2 text-xs text-mist">
+                  Switch any time, also after tickets are sold. Tables already booked whole stay booked; on Individual seats
+                  the free seats at part-booked tables go on sale one by one.
+                </p>
               </div>
             </>
           )}

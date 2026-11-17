@@ -102,8 +102,13 @@ single seats at a table (whatever the show sells online), enter the guest's name
 and mark it Paid or Reserved ("Mark paid" on the guest list once the money comes in). Single-seat
 staff bookings need `supabase/migrations/0012_staff_split_tables.sql`. **Edit** on a booking
 corrects the contact details and notes; on bookings added by hand also the source, amount and
-paid / not paid yet (needs `0013_edit_booking.sql`). To move a booking to other seats, cancel it and
-add a new one.
+paid / not paid yet (needs `0013_edit_booking.sql`). **Change seats** in the same window moves a booking to
+other seats, or adds / drops seats, without cancelling it: same reference, payment and check-in (needs
+`0017_change_booking_seats.sql`). The amount isn't changed automatically: on bookings added by hand, "Use that
+amount" fills in the new seat price; on online bookings, collect or refund any difference yourself.
+
+**Tables** (Edit show, seating-plan shows): *Whole tables only* or *Individual seats*. Switch any time, also after
+tickets are sold; tables already booked whole stay booked.
 
 **Floors on sale** (Edit show, seating-plan shows): untick Downstairs or Upstairs to stop selling
 that floor on the website, at any time, also after tickets are sold. Existing bookings there stay
