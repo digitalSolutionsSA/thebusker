@@ -166,6 +166,18 @@ export default function SeatMap({ floor, taken, selected, onToggle, tableMode = 
             {/* Bigger invisible hit area for fingers */}
             <rect x={s.x - 12} y={s.y - 12} width={24} height={24} fill="transparent" />
             <Seat spot={s} state={state} />
+            <text
+              x={s.x}
+              y={s.y}
+              textAnchor="middle"
+              dominantBaseline="central"
+              transform={s.rotate ? `rotate(${s.rotate} ${s.x} ${s.y})` : undefined}
+              className={`pointer-events-none text-[8.5px] font-semibold ${
+                state === 'selected' ? 'fill-night' : state === 'taken' ? 'fill-white/20' : 'fill-ivory/80'
+              }`}
+            >
+              {s.id.slice(s.id.lastIndexOf('-') + 1)}
+            </text>
           </g>
         )
       })}
@@ -187,8 +199,13 @@ function DownstairsDecor() {
       <text x={44} y={810} textAnchor="middle" transform="rotate(-90 44 810)" className={caption}>
         Entrance
       </text>
+      {/* Box names at both ends of the side columns, and beside the stage-side seats */}
+      <text x={42} y={264} textAnchor="middle" className={caption}>SC</text>
       <text x={42} y={710} textAnchor="middle" className={caption}>SC</text>
+      <text x={737} y={155} textAnchor="middle" className={caption}>SH</text>
       <text x={737} y={650} textAnchor="middle" className={caption}>SH</text>
+      <text x={106} y={192} textAnchor="middle" dominantBaseline="central" className={caption}>SL</text>
+      <text x={671} y={192} textAnchor="middle" dominantBaseline="central" className={caption}>SR</text>
       <text x={700} y={782} textAnchor="middle" className={caption}>SG</text>
       <text x={160} y={985} textAnchor="middle" className={caption}>SD</text>
       <text x={600} y={985} textAnchor="middle" className={caption}>SF</text>
@@ -200,7 +217,7 @@ function DownstairsDecor() {
 }
 
 function UpstairsDecor() {
-  const { stage, sound, walls, hallCentre } = upstairsPlan
+  const { stage, sound, walls, hallCentre, labels } = upstairsPlan
   return (
     <g aria-hidden className="pointer-events-none">
       <rect x={stage.x} y={stage.y} width={stage.w} height={stage.h} rx={3} strokeDasharray="6 6" className="fill-gold/5 stroke-gold/40" strokeWidth={1.5} />
@@ -211,6 +228,19 @@ function UpstairsDecor() {
       <text x={hallCentre.x} y={hallCentre.y} textAnchor="middle" className="fill-ivory/25 text-[18px] font-semibold uppercase tracking-[0.3em]">
         Open to the hall
       </text>
+      {labels.map((l) => (
+        <text
+          key={`${l.text}-${l.x}`}
+          x={l.x}
+          y={l.y}
+          textAnchor="middle"
+          dominantBaseline="central"
+          transform={l.rotate ? `rotate(${l.rotate} ${l.x} ${l.y})` : undefined}
+          className={l.rotate ? 'fill-mist text-[9px] font-semibold uppercase tracking-[0.15em]' : caption}
+        >
+          {l.text}
+        </text>
+      ))}
       <rect x={sound.x} y={sound.y} width={sound.w} height={sound.h} rx={3} className="fill-ivory/5 stroke-ivory/30" strokeWidth={1.5} />
       <text x={sound.x + sound.w / 2} y={sound.y + sound.h / 2} textAnchor="middle" dominantBaseline="central" className="fill-ivory/60 text-[15px] font-bold tracking-[0.3em]">
         SOUND BOX

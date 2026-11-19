@@ -101,12 +101,7 @@ const sideTable = (id: string, label: string, cx: number, top: number, side: 'le
   }
 }
 
-const sideTables = [
-  sideTable('S1', 'Side table 1', 111, 395, 'left'),
-  sideTable('S2', 'Side table 2', 111, 565, 'left'),
-  sideTable('S3', 'Side table 3', 649, 395, 'right'),
-  sideTable('S4', 'Side table 4', 649, 565, 'right'),
-]
+
 
 /** The 4-seater rows: 1 seat at each end + 4 along the front */
 const gridTable = (id: string, left: number, top: number): VenueTable => ({
@@ -123,24 +118,41 @@ const gridTable = (id: string, left: number, top: number): VenueTable => ({
   ]),
 })
 
+/**
+ * Even grid: every 4-seater block (table + its front seats, 56 tall) sits on one of six rows with the same
+ * 17.5 gap above, between and below them — from the long tables' foot seats (bottom 356) down to the centre table (top 814.5)
+ */
+const ROW_GAP = 17.5
+const ROW_PITCH = 56 + ROW_GAP
+const rowTops = Array.from({ length: 6 }, (_, k) => 356 + ROW_GAP + k * ROW_PITCH)
+
 const gridTables = [
-  ...[390, 465, 540, 615, 690, 765].map((top, i) => gridTable(`A${i + 1}`, 175, top)),
-  ...[370, 443, 517, 590, 663, 737].map((top, i) => gridTable(`B${i + 1}`, 337, top)),
-  ...[390, 465, 540, 615, 690, 765].map((top, i) => gridTable(`C${i + 1}`, 500, top)),
+  ...rowTops.map((top, i) => gridTable(`A${i + 1}`, 175, top)),
+  ...rowTops.map((top, i) => gridTable(`B${i + 1}`, 337, top)),
+  ...rowTops.map((top, i) => gridTable(`C${i + 1}`, 500, top)),
+]
+
+// Each side table (with its end seats) spans two grid rows: S1/S3 rows 1–2, S2/S4 rows 3–4
+const sideTop = (row: number) => 356 + ROW_GAP + row * ROW_PITCH + 22
+const sideTables = [
+  sideTable('S1', 'Side table 1', 111, sideTop(0), 'left'),
+  sideTable('S2', 'Side table 2', 111, sideTop(2), 'left'),
+  sideTable('S3', 'Side table 3', 649, sideTop(0), 'right'),
+  sideTable('S4', 'Side table 4', 649, sideTop(2), 'right'),
 ]
 
 /** Long table in front of the sound box: 1 seat at each end + 8 along the front */
 const centreTable: VenueTable = {
   id: 'D1',
   label: 'Centre table',
-  cx: 379,
+  cx: 380,
   cy: 832,
   w: 178,
   h: 35,
   seats: numbered('D1', [
-    { x: 278, y: 832 },
-    { x: 480, y: 832 },
-    ...line(8, 301, 866, 458, 866),
+    { x: 279, y: 832 },
+    { x: 481, y: 832 },
+    ...line(8, 302, 866, 459, 866),
   ]),
 }
 
@@ -160,7 +172,7 @@ const angledTable = (id: string, label: string, cx: number, cy: number, deg: num
   ]),
 })
 
-const angledTables = [angledTable('E1', 'Angled table left', 185, 855, 14), angledTable('E2', 'Angled table right', 582, 860, -14)]
+const angledTables = [angledTable('E1', 'Angled table left', 173, 855, 14), angledTable('E2', 'Angled table right', 587, 855, -14)]
 
 const downstairs: Floor = {
   id: 'downstairs',
@@ -182,8 +194,9 @@ const downstairs: Floor = {
       'Box SH',
       [172, 198, 310, 337, 427, 455, 483, 511, 539, 567, 595, 623].map((y) => ({ x: 737, y })),
     ),
-    ...singles('SD', 'Box SD', line(8, 75, 906, 258, 960), 16),
-    ...singles('SF', 'Box SF', line(8, 505, 960, 685, 906), -16),
+    // Run parallel to the angled back walls (57,872→275,962 and 485,962→722,872), ~22 units clear of them
+    ...singles('SD', 'Box SD', line(8, 72, 902, 247, 974), 22),
+    ...singles('SF', 'Box SF', line(8, 518, 973, 703, 905), -21),
     ...singles('SG', 'Box SG', line(4, 652, 754, 722, 718), -27),
   ],
 }
@@ -226,6 +239,24 @@ export const upstairsPlan = {
     polyline([[660, 841], [550, 951]]),
   ].join(' '),
   hallCentre: up(360, 480),
+  /** Group names drawn beside the seats, matching the seat labels ("Balcony left", "Balcony back row 1 …") */
+  labels: [
+    // Angled corner rows, written along the row on its hall side (their seats number from 1 on their own)
+    { text: 'Row 1 left', x: 100.7, y: 902.3, rotate: 45 },
+    { text: 'Row 1 right', x: 659.3, y: 902.3, rotate: -45 },
+    { text: 'Row 2 left', x: 95.7, y: 983.7, rotate: 45 },
+    { text: 'Row 2 right', x: 664.3, y: 983.7, rotate: -45 },
+    { text: 'Left', x: 40, y: 190 },
+    { text: 'Left', x: 40, y: 826 },
+    { text: 'Right', x: 720, y: 190 },
+    { text: 'Right', x: 720, y: 826 },
+    { text: 'Row 1', x: 249, y: 970 },
+    { text: 'Row 1', x: 511, y: 970 },
+    { text: 'Row 2', x: 222, y: 1037 },
+    { text: 'Row 2', x: 538, y: 1037 },
+    { text: 'Row 3', x: 75, y: 1090 },
+    { text: 'Row 3', x: 685, y: 1090 },
+  ] as { text: string; x: number; y: number; rotate?: number }[],
 }
 
 const upstairs: Floor = {
