@@ -1,6 +1,6 @@
 import { Suspense, useEffect, type ReactNode } from 'react'
 import { Link, Navigate, NavLink, Outlet, useLocation } from 'react-router-dom'
-import { CalendarDays, Globe, LogOut, PlusCircle } from 'lucide-react'
+import { BarChart3, CalendarDays, Globe, LogOut, PlusCircle } from 'lucide-react'
 import { signOut, useStaffSession } from '../../../hooks/useStaffSession'
 import { ADMIN_BASE, site } from '../../../config/site'
 import Logo from '../../ui/Logo'
@@ -61,6 +61,9 @@ export default function AdminLayout() {
               <NavLink to={`${ADMIN_BASE}/shows/new`} className={({ isActive }) => `${nav} ${isActive ? 'bg-gold/15 text-gold' : 'text-mist hover:text-ivory'}`}>
                 Add show
               </NavLink>
+              <NavLink to={`${ADMIN_BASE}/stats`} className={({ isActive }) => `${nav} ${isActive ? 'bg-gold/15 text-gold' : 'text-mist hover:text-ivory'}`}>
+                Sales & stats
+              </NavLink>
             </nav>
           </div>
           <div className="flex items-center gap-3">
@@ -88,6 +91,9 @@ export default function AdminLayout() {
         </NavLink>
         <NavLink to={`${ADMIN_BASE}/shows/new`} className={({ isActive }) => `${tab} ${isActive ? 'text-gold' : 'text-mist'}`}>
           <PlusCircle size={18} /> Add show
+        </NavLink>
+        <NavLink to={`${ADMIN_BASE}/stats`} className={({ isActive }) => `${tab} ${isActive ? 'text-gold' : 'text-mist'}`}>
+          <BarChart3 size={18} /> Stats
         </NavLink>
         <Link to="/" className={`${tab} text-mist`}>
           <Globe size={18} /> View site

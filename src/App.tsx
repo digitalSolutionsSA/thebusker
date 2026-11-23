@@ -22,6 +22,7 @@ const AdminSetPassword = lazy(() => import('./pages/admin/AdminSetPassword'))
 const AdminShows = lazy(() => import('./pages/admin/AdminShows'))
 const AdminShowEdit = lazy(() => import('./pages/admin/AdminShowEdit'))
 const AdminShowGuests = lazy(() => import('./pages/admin/AdminShowGuests'))
+const AdminStats = lazy(() => import('./pages/admin/AdminStats'))
 
 export default function App() {
   return (
@@ -34,6 +35,7 @@ export default function App() {
           <Route path="shows/new" element={<AdminShowEdit />} />
           <Route path="shows/:id/edit" element={<AdminShowEdit />} />
           <Route path="shows/:id/guests" element={<AdminShowGuests />} />
+          <Route path="stats" element={<AdminStats />} />
         </Route>
 
         <Route element={<SiteLayout />}>
