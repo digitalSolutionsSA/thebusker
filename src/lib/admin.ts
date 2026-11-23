@@ -24,6 +24,8 @@ export interface Booking {
   notes: string | null
   checked_in_at: string | null
   created_at: string
+  /** Customer referred by Busker management ("Gert / The Busker"); missing until migration 0018 is run */
+  referred_by_management?: boolean
 }
 
 export const sourceLabels: Record<BookingSource, string> = {
@@ -197,7 +199,8 @@ export async function uploadPoster(original: File): Promise<string> {
 export async function listBookings(showId: string): Promise<Booking[]> {
   const { data, error } = await db()
     .from('bookings')
-    .select('id, show_id, quantity, seat_ids, name, email, phone, amount_cents, currency, status, source, notes, checked_in_at, created_at')
+    // '*' so the guest list keeps working whether or not newer columns exist yet
+    .select('*')
     .eq('show_id', showId)
     .order('created_at', { ascending: false })
   fail(error)
@@ -209,6 +212,14 @@ export async function setCheckedIn(bookingId: string, checkedIn: boolean): Promi
   fail(error)
   return (data as string | null) ?? null
 }
+
+/** Ticks or unticks "Gert / The Busker" (referred by management) on a booking */
+export async function setBookingReferral(bookingId: string, referred: boolean) {
+  const { error } = await db().rpc('set_booking_referral', { p_booking_id: bookingId, p_referred: referred })
+  fail(error)
+}
+
+export const referralLabel = 'Gert / The Busker'
 
 export async function markPaid(bookingId: string) {
   const { error } = await db().rpc('mark_booking_paid', { p_booking_id: bookingId })

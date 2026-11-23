@@ -1,7 +1,8 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import { X } from 'lucide-react'
 import type { Show } from '../../../types'
-import { bookingRef, changeBookingSeats, manualSources, sourceLabels, updateBooking, type Booking, type BookingSource } from '../../../lib/admin'
+import { bookingRef, changeBookingSeats, manualSources, setBookingReferral, sourceLabels, updateBooking, type Booking, type BookingSource } from '../../../lib/admin'
+import { ReferralBox } from './ManualSale'
 import { describeSeats, floors, seatsById, type FloorId } from '../../../data/venueLayout'
 import { formatPrice, seatsTotal } from '../../../lib/format'
 import { toggleUnit } from '../../../lib/seatSelection'
@@ -24,6 +25,7 @@ export default function EditBooking({ show, booking: b, onClose, onSaved }: { sh
   const [notes, setNotes] = useState(b.notes ?? '')
   const [source, setSource] = useState<BookingSource>(b.source)
   const [paid, setPaid] = useState(b.status === 'paid')
+  const [referred, setReferred] = useState(!!b.referred_by_management)
   const [amount, setAmount] = useState((b.amount_cents / 100).toFixed(2))
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -60,6 +62,7 @@ export default function EditBooking({ show, booking: b, onClose, onSaved }: { sh
         notes,
         ...(online ? {} : { source, paid, amountCents: Math.round(rands * 100) }),
       })
+      if (referred !== !!b.referred_by_management) await setBookingReferral(b.id, referred)
       onSaved()
     } catch (err) {
       const message = (err as Error).message
@@ -170,6 +173,8 @@ export default function EditBooking({ show, booking: b, onClose, onSaved }: { sh
                 <input id="eb-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={adminInput} />
               </div>
             </div>
+
+            <ReferralBox checked={referred} onChange={setReferred} />
 
             {online ? (
               <p className={`${adminCard} px-4 py-3 text-xs text-mist`}>

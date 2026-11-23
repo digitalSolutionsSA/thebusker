@@ -1,7 +1,7 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import { X } from 'lucide-react'
 import type { Show } from '../../../types'
-import { createManualBooking, manualSources, sourceLabels, type BookingSource } from '../../../lib/admin'
+import { createManualBooking, manualSources, referralLabel, setBookingReferral, sourceLabels, type BookingSource } from '../../../lib/admin'
 import { formatPrice, seatsTotal } from '../../../lib/format'
 import { seatsOf, toggleUnit, unitLabel as labelOf } from '../../../lib/seatSelection'
 import { floors, type FloorId } from '../../../data/venueLayout'
@@ -24,6 +24,7 @@ export default function ManualSale({ show, onClose, onSaved }: { show: Show; onC
   const [email, setEmail] = useState('')
   const [source, setSource] = useState<BookingSource>('phone')
   const [paid, setPaid] = useState(true)
+  const [referred, setReferred] = useState(false)
   const [amount, setAmount] = useState<string | null>(null) // null = follow the seat count
   const [notes, setNotes] = useState('')
   const [busy, setBusy] = useState(false)
@@ -51,7 +52,7 @@ export default function ManualSale({ show, onClose, onSaved }: { show: Show; onC
     setBusy(true)
     setError(null)
     try {
-      await createManualBooking({
+      const id = await createManualBooking({
         showId: show.id,
         seatIds: general ? [] : seatIds,
         quantity: general ? quantity : undefined,
@@ -63,6 +64,12 @@ export default function ManualSale({ show, onClose, onSaved }: { show: Show; onC
         amountCents: Math.round(rands * 100),
         notes,
       })
+      if (referred) {
+        // The booking is already saved, so don't let a failure here invite a second (duplicate) booking
+        await setBookingReferral(id, true).catch((err: Error) =>
+          window.alert(`Booking saved, but it couldn't be marked ${referralLabel}: ${err.message}\nTick it under Edit on the guest list.`),
+        )
+      }
       onSaved()
     } catch (err) {
       const message = (err as Error).message
@@ -200,6 +207,7 @@ export default function ManualSale({ show, onClose, onSaved }: { show: Show; onC
                 ))}
               </select>
             </div>
+            <ReferralBox checked={referred} onChange={setReferred} />
             <div className="grid grid-cols-2 gap-2">
               {[
                 { value: true, label: 'Paid', hint: 'Money received' },
@@ -242,5 +250,18 @@ export default function ManualSale({ show, onClose, onSaved }: { show: Show; onC
         </div>
       </form>
     </div>
+  )
+}
+
+/** "Gert / The Busker": the customer was referred by Busker management, so Sales & stats can leave them out */
+export function ReferralBox({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <label className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 ${checked ? 'border-gold bg-gold/10' : 'border-white/15'}`}>
+      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="mt-0.5 h-4 w-4 accent-[#e2bd6d]" />
+      <span>
+        <span className="block text-sm font-semibold">{referralLabel}</span>
+        <span className="block text-xs text-mist">Referred by Busker management</span>
+      </span>
+    </label>
   )
 }

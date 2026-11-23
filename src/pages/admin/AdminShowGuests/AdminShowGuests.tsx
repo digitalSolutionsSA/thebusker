@@ -9,6 +9,7 @@ import {
   getShow,
   listBookings,
   markPaid,
+  referralLabel,
   setCheckedIn,
   sourceLabels,
   type Booking,
@@ -300,6 +301,7 @@ function BookingCard({
             <span>Ref {bookingRef(b.id)}</span>
             <span>{formatPrice(b.amount_cents, b.currency)}</span>
             <span>{sourceLabels[b.source]}</span>
+            {b.referred_by_management && <span className="font-semibold text-gold">{referralLabel}</span>}
             {b.phone && (
               <a href={`tel:${b.phone.replace(/\s/g, '')}`} className="inline-flex items-center gap-1 text-ivory/80 hover:text-gold">
                 <Phone size={11} /> {b.phone}
